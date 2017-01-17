@@ -1,0 +1,3 @@
+[submodule "MACE"]
+	path = MACE
+	url = ./MACE
