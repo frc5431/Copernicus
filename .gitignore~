@@ -29,6 +29,4 @@
 *.app
 
 #Cmake crap
-[Bb]uild/
-[Bb]uild/*
-
+build/
