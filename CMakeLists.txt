@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.11)
 project(copernicus)
 
 add_subdirectory(MACE)
+add_subdirectory(cpprestsdk/Release)
 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 
@@ -13,3 +14,5 @@ target_include_directories(copernicus PUBLIC "include/")
 target_include_directories(copernicus PUBLIC ${MACE_INCLUDES})
 target_link_libraries(copernicus LINK_PUBLIC MACE)
 
+target_include_directories(copernicus PUBLIC "cpprestsdk/Release/include")
+target_link_libraries(copernicus LINK_PUBLIC cpprest)

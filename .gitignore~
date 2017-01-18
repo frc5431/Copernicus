@@ -29,4 +29,9 @@
 *.app
 
 #Cmake crap
-build/
+[Bb]uild/
+[Bb]uild/*
+
+cpprestsdk/*
+cpprestsdk/
+
