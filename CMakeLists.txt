@@ -1,18 +1,26 @@
+
 cmake_minimum_required(VERSION 2.8.11)
 
 project(copernicus)
 
 add_subdirectory(MACE)
-add_subdirectory(cpprestsdk/Release)
+
+find_package( OpenCV REQUIRED )
+find_package( Boost COMPONENTS thread system REQUIRED)
 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 
 add_executable(copernicus ${SOURCE_FILES})
 
+target_compile_definitions(copernicus PUBLIC RESOURCE_FOLDER="${PROJECT_SOURCE_DIR}/res")
+
 target_include_directories(copernicus PUBLIC "include/")
+
+target_include_directories(copernicus PUBLIC ${OpenCV_INCLUDE_DIR})
+target_link_libraries(copernicus LINK_PUBLIC ${OpenCV_LIBS})
+
+target_include_directories(copernicus PUBLIC ${Boost_INCLUDE_DIRS})
+target_link_libraries(copernicus LINK_PUBLIC ${Boost_LIBRARIES})
 
 target_include_directories(copernicus PUBLIC ${MACE_INCLUDES})
 target_link_libraries(copernicus LINK_PUBLIC MACE)
-
-target_include_directories(copernicus PUBLIC "cpprestsdk/Release/include")
-target_link_libraries(copernicus LINK_PUBLIC cpprest)
