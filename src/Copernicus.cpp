@@ -54,30 +54,26 @@ void create(){
     group.addChild(turretBase);
 }
 
-const char ip[] = "http://webcam.st-malo.com"; //Ip base of stream
-int port = 80; //Port of stream
-const char name[] = "axis-cgi/mjpg/video.cgi"; //extension
-
-MjpgClient client(ip, port, name); //Get cap line
+//MjpgClient client("http://webcam.st-malo.com", 80, "axis-cgi/mjpg/video.cgi"); //Get cap line
 
 int main(int argc, char** argv){
     os::WindowModule win = os::WindowModule(500, 500, "Copernicus");
     win.setCreationCallback(&create);
-
+	win.setFPS(30);
     win.addChild(group);
 
     MACE::addModule(win);
 
     MACE::init();
 
-    client.setDiscDim(640, 480); //Set disconnected image size
+  //  client.setDiscDim(640, 480); //Set disconnected image size
 
     while(MACE::isRunning()){
         MACE::update();
 
-        cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
+    //    cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
 
-        std::cout << curframe.size() << std::endl;
+       // std::cout << curframe.size() << std::endl;
 
         std::this_thread::sleep_for(std::chrono::milliseconds(33));
     }

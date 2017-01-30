@@ -298,6 +298,8 @@ int* MjpgClient::getResolution() {
     } catch(std::exception& err) {
         std::cerr << "Problem getting resolution" << std::endl;
     }
+
+	return dims;
 }
 
 bool MjpgClient::setResolution(int width, int height) {

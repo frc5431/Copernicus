@@ -1,12 +1,18 @@
-
 cmake_minimum_required(VERSION 2.8.11)
 
 project(copernicus)
 
-add_subdirectory(MACE)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib/out)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/bin)
 
-find_package( OpenCV REQUIRED )
-find_package( Boost COMPONENTS thread system REQUIRED)
+add_subdirectory(MACE)
 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 
@@ -14,13 +20,12 @@ add_executable(copernicus ${SOURCE_FILES})
 
 target_compile_definitions(copernicus PUBLIC RESOURCE_FOLDER="${PROJECT_SOURCE_DIR}/res")
 
+file(GLOB_RECURSE LIBRARY_DEBUG "lib/debug/*.lib")
+file(GLOB_RECURSE LIBRARY_RELEASE "lib/release/*.lib")
+
+target_link_libraries(copernicus debug ${LIBRARY_DEBUG} optimized ${LIBRARY_RELEASE})
+
 target_include_directories(copernicus PUBLIC "include/")
-
-target_include_directories(copernicus PUBLIC ${OpenCV_INCLUDE_DIR})
-target_link_libraries(copernicus LINK_PUBLIC ${OpenCV_LIBS})
-
-target_include_directories(copernicus PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(copernicus LINK_PUBLIC ${Boost_LIBRARIES})
 
 target_include_directories(copernicus PUBLIC ${MACE_INCLUDES})
 target_link_libraries(copernicus LINK_PUBLIC MACE)
