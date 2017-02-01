@@ -14,9 +14,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/bin)
 
 add_subdirectory(MACE)
 
+file(GLOB_RECURSE HEADER_FILES "include/*.h")
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 
-add_executable(copernicus ${SOURCE_FILES})
+add_executable(copernicus ${SOURCE_FILES} ${HEADER_FILES})
 
 target_compile_definitions(copernicus PUBLIC RESOURCE_FOLDER="${PROJECT_SOURCE_DIR}/res")
 
