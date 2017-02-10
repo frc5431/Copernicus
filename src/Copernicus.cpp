@@ -1,6 +1,7 @@
 #include <MACE/MACE.h>
 #include <iostream>
 #include <mjpgclient.h>
+//#include <udpclient.hpp>
 #include <Copernicus.h>
 
 using namespace mc;
@@ -162,9 +163,15 @@ void create() {
 	titan::setTargetRPM(1200);
 }
 
-//MjpgClient client("http://webcam.st-malo.com", 80, "axis-cgi/mjpg/video.cgi"); //Get cap line
+//MjpgClient client("10.54.31.21", 80, ""); //Get cap line
 
 int main(int argc, char** argv) {
+	/*std::thread async = std::thread([]() {
+		boost::asio::io_service io_service;
+		udp_server udp_Server(io_service);
+		io_service.run();
+	});*/
+
 	os::WindowModule win = os::WindowModule(720, 720, "Copernicus");
 	win.setCreationCallback(&create);
 	win.setFPS(30);
@@ -179,13 +186,16 @@ int main(int argc, char** argv) {
 	while (MACE::isRunning()) {
 		MACE::update();
 
-		//    cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
+	
+		//  cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
 
-		   // std::cout << curframe.size() << std::endl;
+		   //std::cout << curframe.size() << std::endl;
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(33));
 	}
 	MACE::destroy();
+
+	//async.detach();
 
 	return 0;
 }
