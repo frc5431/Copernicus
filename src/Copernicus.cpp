@@ -1,7 +1,7 @@
 #include <MACE/MACE.h>
 #include <iostream>
 #include <mjpgclient.h>
-//#include <udpclient.hpp>
+#include <udpclient.hpp>
 #include <Copernicus.h>
 
 using namespace mc;
@@ -10,11 +10,13 @@ gfx::Group group = gfx::Group();
 
 gfx::Group turretBase = gfx::Group();
 
+gfx::ColorAttachment cameraTexture;
+
 gfx::Text turretBaseText, driveGear;
 gfx::Text gearIn;
 gfx::Text flywheelRPMText, targetRPMText;
 gfx::Text floorIntakeText, topIntakeText;
-gfx::Image turretBaseAngle, floorIntake, topIntake;
+gfx::Image turretBaseAngle, floorIntake, topIntake, camera;
 
 gfx::ProgressBar flywheelRPM, targetRPM;
 
@@ -78,6 +80,10 @@ namespace titan {
 }
 
 void create() {
+	cameraTexture.init();
+	camera.setTexture(cameraTexture);
+	group.addChild(camera);
+
 	turretBaseAngle = gfx::Image(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
 	turretBase.addChild(turretBaseAngle);
 
@@ -170,40 +176,47 @@ void create() {
 	titan::setTargetRPM(1200);
 }
 
-//MjpgClient client("10.54.31.21", 80, ""); //Get cap line
+MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
 
 int main(int argc, char** argv) {
-	/*std::thread async = std::thread([]() {
-		boost::asio::io_service io_service;
-		udp_server udp_Server(io_service);
-		io_service.run();
-	});*/
+	try {
+		/*std::thread async = std::thread([]() {
+			boost::asio::io_service io_service;
+			udp_server udp_Server(io_service);
+			io_service.run();
+		});*/
+		os::WindowModule win = os::WindowModule(720, 720, "Copernicus");
+		win.setCreationCallback(&create);
+		win.setFPS(30);
+		win.setResizable(true);
+		win.addChild(group);
 
-	os::WindowModule win = os::WindowModule(720, 720, "Copernicus");
-	win.setCreationCallback(&create);
-	win.setFPS(30);
-	win.setResizable(true);
-	win.addChild(group);
+		MACE::addModule(win);
 
-	MACE::addModule(win);
+		MACE::init();
 
-	MACE::init();
+		//  client.setDiscDim(640, 480); //Set disconnected image size
 
-	//  client.setDiscDim(640, 480); //Set disconnected image size
+		while (MACE::isRunning()) {
+			MACE::update();
 
-	while (MACE::isRunning()) {
-		MACE::update();
 
-	
-		//  cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
+			cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
 
-		   //std::cout << curframe.size() << std::endl;
+			if (!curframe.empty() && curframe.size().width > 0 && curframe.size().height > 0) {
+				std::cout << curframe.size() << std::endl;
+		//		cameraTexture.setData(curframe.data, curframe.size().width, curframe.size().height, GL_BGR, GL_UNSIGNED_BYTE, GL_UNSIGNED_BYTE);
+			}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(33));
+			std::this_thread::sleep_for(std::chrono::milliseconds(33));
+		}
+		MACE::destroy();
+
+		//async.detach();
 	}
-	MACE::destroy();
-
-	//async.detach();
+	catch (const std::exception& ex) {
+		Exception::handleException(ex);
+	}
 
 	return 0;
 }

@@ -117,12 +117,15 @@ private:
 					titan::setHighGear(highGear);
 					titan::setTopIntake(topIntake);
 					titan::setTurretAngle(turretAngle);
+
 					/*double pressure, bool highGear, bool bottomIntake,
 					bool stream, double crosshairOffset, double turretAngle,
 					int RPM, bool topIntake, int leftRPM, int rightRPM, bool holdsGear, int mode, bool powered*/
 				}
 			}
 		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(33));
 	}
 	void handle_recieve(const boost::system::error_code& error, size_t) {
 		start_recieve();

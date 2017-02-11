@@ -26,7 +26,7 @@
 
 int MjpgClient::getLine(char* ip) {
     try {
-        this->mjpgcap = cv::VideoCapture(ip, cv::VideoCaptureAPIs::CAP_FFMPEG);
+		this->mjpgcap = cv::VideoCapture(ip);//, cv::VideoCaptureAPIs::CAP_FFMPEG);
         int count_max = 0;
         while(!mjpgcap.isOpened()) {
             if(count_max++ > this->max_retry) {
@@ -37,7 +37,11 @@ int MjpgClient::getLine(char* ip) {
     } catch(std::exception& err) {
         std::cerr << "Failed to open mjpg stream..." << err.what() << std::endl;
         return 1;
-    }
+	}
+	catch (...) {
+		std::cerr << "Error in mjpeg init";
+		return 1;
+	}
 }
 
 template <class T>
