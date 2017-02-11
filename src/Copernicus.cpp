@@ -21,7 +21,7 @@ gfx::ProgressBar flywheelRPM, targetRPM;
 namespace titan {
 	void setTurretAngle(const float angle) {
 		turretBaseAngle.getTransformation().rotation[2] = angle * (math::pi() / 180.0f);
-		turretBaseText.setText(std::to_wstring(angle));
+		turretBaseText.setText(std::to_wstring(static_cast<int>(angle)));
 	}
 
 	void setHighGear(const bool highGear) {
@@ -82,8 +82,9 @@ void create() {
 	turretBase.addChild(turretBaseAngle);
 
 	gfx::Font f = gfx::Font::loadFont(RESOURCE_FOLDER + std::string("/consola.ttf"));
-	f.setSize(24);
+	f.setSize(16);
 	turretBaseText = gfx::Text(L"0°", f);
+	turretBaseText.setTexture(Colors::GREEN);
 	turretBaseText.setHorizontalAlign(gfx::HorizontalAlign::LEFT);
 	turretBaseText.setVerticalAlign(gfx::VerticalAlign::TOP);
 	turretBase.addChild(turretBaseText);
@@ -96,8 +97,10 @@ void create() {
 
 	turretBase.setX(-0.8f);
 	turretBase.setY(-0.8f);
-	turretBase.setWidth(0.4f);
-	turretBase.setHeight(0.4f);
+	turretBase.setWidth(0.2f);
+	turretBase.setHeight(0.2f);
+	turretBase.setProperty(gfx::Entity::MAINTAIN_WIDTH, true);
+	turretBase.setProperty(gfx::Entity::MAINTAIN_HEIGHT, true);
 
 	group.addChild(turretBase);
 
@@ -115,6 +118,7 @@ void create() {
 
 	f.setSize(32);
 	floorIntakeText = gfx::Text(L"Loading...", f);
+	floorIntakeText.setTexture(Colors::WHITE);
 	floorIntake.addChild(floorIntakeText);
 
 	topIntake = gfx::Image(Colors::WHITE);
@@ -124,6 +128,7 @@ void create() {
 	group.addChild(topIntake);
 
 	topIntakeText = gfx::Text(L"Loading..", f);
+	topIntakeText.setTexture(Colors::WHITE);
 	topIntake.addChild(topIntakeText);
 
 	gfx::ColorAttachment selectionTexture = gfx::ColorAttachment(RESOURCE_FOLDER + std::string("/progressBar.png"));
@@ -139,6 +144,7 @@ void create() {
 	group.addChild(flywheelRPM);
 
 	flywheelRPMText = gfx::Text(L"Loading...", f);
+	flywheelRPMText.setHorizontalAlign(gfx::HorizontalAlign::LEFT);
 	flywheelRPM.addChild(flywheelRPMText);
 
 	targetRPM = gfx::ProgressBar(0, 4000, 0);
@@ -152,6 +158,7 @@ void create() {
 	group.addChild(targetRPM);
 
 	targetRPMText = gfx::Text(L"Loading...", f);
+	targetRPMText.setHorizontalAlign(gfx::HorizontalAlign::LEFT);
 	targetRPM.addChild(targetRPMText);
 
 	titan::setTurretAngle(0.0f);
@@ -175,6 +182,7 @@ int main(int argc, char** argv) {
 	os::WindowModule win = os::WindowModule(720, 720, "Copernicus");
 	win.setCreationCallback(&create);
 	win.setFPS(30);
+	win.setResizable(true);
 	win.addChild(group);
 
 	MACE::addModule(win);
