@@ -10,8 +10,6 @@ gfx::Group group = gfx::Group();
 
 gfx::Group turretBase = gfx::Group();
 
-gfx::ColorAttachment cameraTexture;
-
 gfx::Text turretBaseText, driveGear;
 gfx::Text gearIn;
 gfx::Text flywheelRPMText, targetRPMText;
@@ -19,6 +17,9 @@ gfx::Text floorIntakeText, topIntakeText;
 gfx::Image turretBaseAngle, floorIntake, topIntake, camera;
 
 gfx::ProgressBar flywheelRPM, targetRPM;
+
+MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
+
 
 namespace titan {
 	void setTurretAngle(const float angle) {
@@ -79,9 +80,38 @@ namespace titan {
 	}
 }
 
+class CameraComponent : public gfx::Component {
+public:
+	void init(gfx::Entity* e) {
+		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
+		en->setTexture(gfx::ColorAttachment());
+		en->getTexture().init();
+	}
+	bool update(gfx::Entity* e) {
+		return false;
+	}
+	void render(gfx::Entity* e) {
+		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
+
+		cv::Mat curframe = client.getFrameMat();
+
+		if (!curframe.empty()) {
+			std::cout << curframe.size() << std::endl;
+
+			cv::flip(curframe, curframe, 0);
+
+			glPixelStorei(GL_UNPACK_ALIGNMENT, (curframe.step & 3) ? 1 : 4);
+			glPixelStorei(GL_UNPACK_ROW_LENGTH, curframe.step / curframe.elemSize());
+			en->getTexture().setData(curframe.ptr(), curframe.cols, curframe.rows, GL_UNSIGNED_BYTE, GL_BGR, GL_RGB);
+		}
+	}
+	void destroy(gfx::Entity*) {};
+};
+
+CameraComponent comp;
+
 void create() {
-	cameraTexture.init();
-	camera.setTexture(cameraTexture);
+	camera.addComponent(comp);
 	group.addChild(camera);
 
 	turretBaseAngle = gfx::Image(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
@@ -176,8 +206,6 @@ void create() {
 	titan::setTargetRPM(1200);
 }
 
-MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
-
 int main(int argc, char** argv) {
 	try {
 		/*std::thread async = std::thread([]() {
@@ -195,18 +223,8 @@ int main(int argc, char** argv) {
 
 		MACE::init();
 
-		//  client.setDiscDim(640, 480); //Set disconnected image size
-
 		while (MACE::isRunning()) {
 			MACE::update();
-
-
-			cv::Mat curframe = client.getFrameMat(); //Test Mat (Use: getFrame for byte string)
-
-			if (!curframe.empty() && curframe.size().width > 0 && curframe.size().height > 0) {
-				std::cout << curframe.size() << std::endl;
-		//		cameraTexture.setData(curframe.data, curframe.size().width, curframe.size().height, GL_BGR, GL_UNSIGNED_BYTE, GL_UNSIGNED_BYTE);
-			}
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(33));
 		}
