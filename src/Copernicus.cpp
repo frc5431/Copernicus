@@ -1,8 +1,9 @@
-#include <MACE/MACE.h>
 #include <iostream>
 #include <mjpgclient.h>
 #include <udpclient.hpp>
 #include <Copernicus.h>
+#include <iostream>
+#include <MACE/MACE.h>
 
 using namespace mc;
 
@@ -23,7 +24,7 @@ MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
 
 namespace titan {
 	void setTurretAngle(const float angle) {
-		turretBaseAngle.getTransformation().rotation[2] = angle * (math::pi() / 180.0f);
+		turretBaseAngle.getTransformation().rotation[2] = math::toRadians(angle);
 		turretBaseText.setText(std::to_wstring(static_cast<int>(angle)));
 	}
 
@@ -81,36 +82,44 @@ namespace titan {
 }
 
 class CameraComponent : public gfx::Component {
+	cv::Mat frame;
 public:
 	void init(gfx::Entity* e) {
 		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
-		en->setTexture(gfx::ColorAttachment());
-		en->getTexture().init();
+		gfx::ColorAttachment c = gfx::ColorAttachment();
+		c.init();
+		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
+		frame = client.getFrameMat();
+
+		std::cout << "ho";
+
+		if (!frame.empty()) {
+			e->makeDirty();
+		}
 		return false;
-	}
+	}//screw oliver
 	void render(gfx::Entity* e) {
 		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
 
-		cv::Mat curframe = client.getFrameMat();
+		if (!frame.empty()) {
+			gfx::ColorAttachment& c = en->getTexture();
+			c.load(frame);
 
-		if (!curframe.empty()) {
-			std::cout << curframe.size() << std::endl;
-
-			cv::flip(curframe, curframe, 0);
-
-			glPixelStorei(GL_UNPACK_ALIGNMENT, (curframe.step & 3) ? 1 : 4);
-			glPixelStorei(GL_UNPACK_ROW_LENGTH, curframe.step / curframe.elemSize());
-			en->getTexture().setData(curframe.ptr(), curframe.cols, curframe.rows, GL_UNSIGNED_BYTE, GL_BGR, GL_RGB);
+			en->setTexture(c);
 		}
 	}
-	void destroy(gfx::Entity*) {};
+	void destroy(gfx::Entity*) {
+	};
 };
 
 CameraComponent comp;
 
 void create() {
+	camera = gfx::Image();
+	camera.setWidth(1.0f);
+	camera.setHeight(1.0f);
 	camera.addComponent(comp);
 	group.addChild(camera);
 
@@ -233,7 +242,7 @@ int main(int argc, char** argv) {
 		//async.detach();
 	}
 	catch (const std::exception& ex) {
-		Exception::handleException(ex);
+		Error::handleError(ex);
 	}
 
 	return 0;
