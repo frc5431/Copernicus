@@ -1,6 +1,4 @@
-#include <iostream>
 #include <mjpgclient.h>
-#include <udpclient.hpp>
 #include <Copernicus.h>
 #include <iostream>
 #include <MACE/MACE.h>
@@ -19,7 +17,7 @@ gfx::Image turretBaseAngle, floorIntake, topIntake, camera;
 
 gfx::ProgressBar flywheelRPM, targetRPM;
 
-MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
+//MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
 
 
 namespace titan {
@@ -91,7 +89,7 @@ public:
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
-		frame = client.getFrameMat();
+//		frame = client.getFrameMat();
 
 		std::cout << "ho";
 
@@ -120,7 +118,10 @@ void create() {
 	camera = gfx::Image();
 	camera.setWidth(1.0f);
 	camera.setHeight(1.0f);
-	camera.addComponent(comp);
+	cv::Mat image = cv::imread("D:\\Workspace\\copernicus\\res\\turretBase-overlay.png", CV_LOAD_IMAGE_COLOR);
+	std::cout << image.step / image.elemSize() << std::endl;
+	camera.setTexture(image);
+	//camera.addComponent(comp);
 	group.addChild(camera);
 
 	turretBaseAngle = gfx::Image(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
