@@ -93,8 +93,6 @@ public:
 	bool update(gfx::Entity* e) {
 		frame = client.getFrameMat();
 
-		std::cout << "ho";
-
 		if (!frame.empty()) {
 			e->makeDirty();
 		}
