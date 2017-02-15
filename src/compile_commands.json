@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/vision/build",
+  "command": "/usr/bin/c++    -isystem /usr/local/include -I/vision/include -isystem /usr/local/include/opencv   -std=c++11 -ggdb   -o CMakeFiles/perception.dir/src/log.cpp.o -c /vision/src/log.cpp",
+  "file": "/vision/src/log.cpp"
+},
+{
+  "directory": "/vision/build",
+  "command": "/usr/bin/c++    -isystem /usr/local/include -I/vision/include -isystem /usr/local/include/opencv   -std=c++11 -ggdb   -o CMakeFiles/perception.dir/src/perception.cpp.o -c /vision/src/perception.cpp",
+  "file": "/vision/src/perception.cpp"
+},
+{
+  "directory": "/vision/build",
+  "command": "/usr/bin/c++    -isystem /usr/local/include -I/vision/include -isystem /usr/local/include/opencv   -std=c++11 -ggdb   -o CMakeFiles/perception.dir/src/processing.cpp.o -c /vision/src/processing.cpp",
+  "file": "/vision/src/processing.cpp"
+}
+]
