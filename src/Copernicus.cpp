@@ -72,12 +72,12 @@ namespace titan {
 
 	void setFlywheelRPM(const float rpm) {
 		flywheelRPM.setProgress(rpm);
-		flywheelRPMText.setText(L"Flywheel: "+std::to_wstring(static_cast<int>(rpm)));
+		flywheelRPMText.setText(L"Flywheel: " + std::to_wstring(static_cast<int>(rpm)));
 	}
 
 	void setTargetRPM(const float rpm) {
 		targetRPM.setProgress(rpm);
-		targetRPMText.setText(L"Target: "+std::to_wstring(static_cast<int>(rpm)));
+		targetRPMText.setText(L"Target: " + std::to_wstring(static_cast<int>(rpm)));
 	}
 }
 
@@ -91,9 +91,7 @@ public:
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
-//		frame = client.getFrameMat();
-
-		std::cout << "ho";
+		//		frame = client.getFrameMat();
 
 		if (!frame.empty()) {
 			e->makeDirty();
@@ -107,8 +105,16 @@ public:
 			gfx::ColorAttachment& c = en->getTexture();
 			c.load(frame);
 
-			en->setTexture(c);
+		//	en->setTexture(c);
 		}
+
+		titan::setFloorIntake(table->GetBoolean("floorIntake", false));
+		titan::setFlywheelRPM(table->GetNumber("flywheelRPM", 0.0));
+		titan::setGearIn(table->GetBoolean("holdsGear", false));
+		titan::setHighGear(table->GetBoolean("highGear", false));
+		titan::setTargetRPM(table->GetNumber("targetRPM", 0.0));
+		titan::setTopIntake(table->GetBoolean("topIntake", false));
+		titan::setTurretAngle(table->GetNumber("turretAngle", 0.0));
 	}
 	void destroy(gfx::Entity*) {
 	};
@@ -120,9 +126,7 @@ void create() {
 	camera = gfx::Image();
 	camera.setWidth(1.0f);
 	camera.setHeight(1.0f);
-//	cv::Mat image = cv::imread("D:\\Workspace\\copernicus\\res\\turretBase-overlay.png", CV_LOAD_IMAGE_COLOR);
-//	camera.setTexture(image);
-	//camera.addComponent(comp);
+	camera.addComponent(comp);
 	group.addChild(camera);
 
 	turretBaseAngle = gfx::Image(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
@@ -207,23 +211,10 @@ void create() {
 	targetRPMText = gfx::Text(L"Loading...", f);
 	targetRPMText.setHorizontalAlign(gfx::HorizontalAlign::LEFT);
 	targetRPM.addChild(targetRPMText);
-
-	titan::setTurretAngle(0.0f);
-	titan::setHighGear(false);
-	titan::setFloorIntake(false);
-	titan::setTopIntake(false);
-	titan::setGearIn(true);
-	titan::setFlywheelRPM(2000);
-	titan::setTargetRPM(1200);
 }
 
 int main(int argc, char** argv) {
 	try {
-		/*std::thread async = std::thread([]() {
-			boost::asio::io_service io_service;
-			udp_server udp_Server(io_service);
-			io_service.run();
-		});*/
 		NetworkTable::SetClientMode();
 		NetworkTable::SetTeam(5431);
 		table = NetworkTable::GetTable("copernicus");
@@ -241,13 +232,9 @@ int main(int argc, char** argv) {
 		while (MACE::isRunning()) {
 			MACE::update();
 
-			std::cout << table->GetBoolean("powered", false) << std::endl;
-
 			std::this_thread::sleep_for(std::chrono::milliseconds(33));
 		}
 		MACE::destroy();
-
-		//async.detach();
 	}
 	catch (const std::exception& ex) {
 		Error::handleError(ex);
