@@ -91,7 +91,7 @@ public:
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
-		//		frame = client.getFrameMat();
+//		frame = client.getFrameMat();
 
 		if (!frame.empty()) {
 			e->makeDirty();

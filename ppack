@@ -1,0 +1,376 @@
+#!/bin/bash
+
+# Configuration settings
+PPACK_LOCATION=$(dirname "$0")
+CONFIG_FOLDER=$PPACK_LOCATION/config
+UPLOAD_CONFIG=$CONFIG_FOLDER/upload.config
+BUILD_LOCATION=$PPACK_LOCATION/build
+INSTALL_LOCATION=$PPACK_LOCATION/install
+ALL_INSTALLER=$INSTALL_LOCATION/install.sh
+
+get_upload_config() {
+	grep --only-matching --perl-regex "(?<=$1\=).*" $UPLOAD_CONFIG
+}
+
+# Get the robot ip address from upload configuration
+ROBOTIP="$(get_upload_config 'ROBOTIP')"
+ROBOTUSER="$(get_upload_config 'ROBOTUSER')"
+ROBOTPASS="$(get_upload_config 'ROBOTPASS')"
+
+# If password provided add it to global scope
+if [ ! -z "$ROBOTPASS" ]; then
+	PASSWORD=$ROBOTPASS
+fi
+
+HELP=0 # default don't show help menu
+PRODUCT=2 # set to unkown product
+AUTORUN=0 # default don't autorun
+PASS=0 # default don't use a password
+SUPLOADER=0 # upload shared libraries
+
+# Available arguments
+HOSTING=--host
+PRODUCTS=--robot
+HELPING=--help
+RUNNING=--run
+JRUNNING=--justrun
+PASSWORDS=--pass
+INSTALLING=--deps
+UPLOADING=--upload-deps
+
+SHOWMESSAGE="the host"
+
+HOSTARCH=$(arch)-linux-gnu
+# Host device checking
+HOSTFILE=bin/perception # compiled host file
+CHECKHOST=1 # flag to see if we should connect to the co-processor
+LOOPC=0 # current argument number
+HITLOOP=-1 # the next hit argument number to detect
+PASSLOOP=-1 # the next hit argument for password
+
+install_deps() {
+echo "
+################
+#              #
+#  Installing  #
+# Dependencies #
+#              #
+################
+
+Starting...
+"
+
+# Install all of the dependencies
+$ALL_INSTALLER
+
+}
+
+# Print an error message in red when a failure occured
+error_print() {
+	printf "${RED}Command: $1:\n   Arg: failure '$2'${NC}\n\n"
+}
+
+# Print header with color
+header_print() {
+	printf "${ORANGE}$1${NC}\n"
+}
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+PURPLE='\033[0;35m'
+ORANGE='\033[0;33m'
+GREY='\033[0;37m'
+NC='\033[0m'
+
+# Other options
+FARG="$1" # default stringed first argument
+
+ADDEDHELP=0 # check to see if the ip is valid then don't throw an error
+
+FOUNDDEVICE=0 # set flag if the ip turned out to be valid
+DEVICEADDR=$ROBOTIP # set the argument flag into global statement
+
+# result options
+CLEANRESULT=0
+COMPILERESULT=0
+UPLOADRESULT=
+
+RELEASETYPE=debug
+
+# Co-processor upload options
+PRODUCTFILE=bin/perception # compiled code of the co-processor
+PRODUCTUSER=$ROBOTUSER # the default username for the co-processor
+PUSHPRODUCTPATH="/home/$PRODUCTUSER/perception" # the compiled path to place the co-processor executable
+
+
+####################
+#                  #
+# Argument Parsing #
+#                  #
+####################
+
+ARGPARSE=0
+
+
+# Parse through all arguments
+for curarg in "$@"
+do
+	CONTINUELOOP=0
+	# default flagging based on any location
+	case "$curarg"
+	in
+		$HOSTING) PRODUCT=0;;
+		$PRODUCTS) PRODUCT=1; ARGPARSE=1; HITLOOP=$(($LOOPC + 2));; 
+		$HELPING) HELP=1; ADDEDHELP=$(($ADDEDHELP + 2));;
+		$RUNNING) AUTORUN=1;;
+		$JRUNNING) AUTORUN=2;;
+		$PASSWORDS) PASS=1; ARGPARSE=1; PASSLOOP=$(($LOOPC + 2));;
+		$INSTALLING) install_deps;;
+		$UPLOADING) SUPLOADER=1;;
+		*) HELP=2; ADDEDHELP=$(($ADDEDHELP + 2));; #CONTINUELOOP=1;;
+	esac
+
+	#if [ $CONTINUELOOP -eq 0 ]; then
+	#	continue # No need to parse for anything else, just continue
+	#fi 
+
+	# increment the arg locking loop	
+	LOOPC=$(($LOOPC + 1))
+
+	# custom ip configuration if the product argument was brought
+	if [ ! -z "$curarg" ] && [ $PRODUCT -eq 1 ] && [ $CHECKHOST -eq 1 ] && [ $HITLOOP -eq $LOOPC ]; then
+		PROPER_ARG=1
+		if [[ "$curarg" == *"--"* ]]; then
+			PROPER_ARG=0 # This isn't an ip skip pulling and use default configuration
+		fi
+
+		# Fake the argument with a default option
+		if [ $PROPER_ARG -eq 0 ]; then
+			curarg="$ROBOTIP"
+		fi
+
+		ISDEVICE=$(ping -c 1 $curarg -W 1 > /dev/null && echo 1 || echo 0) # ping the device to make sure it exists
+
+		DEVICEADDR="$curarg" # set the ip of the device found
+
+		# check to see if the ping was succesful 
+		if [ $ISDEVICE -eq 1 ]; then
+			FOUNDDEVICE=1 # set flag to device was found
+		else
+			FOUNDDEVICE=0 # set flag to no device found
+		fi
+		CHECKHOST=0 # set the flag to not check for the device again
+		
+		HELP=0 # if the help error has only been thrown once, reset it to 0
+		ARGPARSE=0 # set to don't parse next argument
+		HITLOOP=-1 # don't anchor argument again
+	fi
+
+	# if the argument exists and a password is provided, use it for ssh
+	if [ ! -z "$curarg" ] && [ $PASS -eq 1 ] && [ $PASSLOOP -eq $LOOPC ]; then
+		PASSWORD="$curarg"
+		HELP=0	# read message above
+		ARGPARSE=0 # set to not parse the nest argument
+		PASSLOOP=-1 # don't anchor argument again
+	fi
+
+	if [ $HELP -eq 2 ] && [ $ARGPARSE -eq 0 ]; then
+		if [[ -z "$FARG" ]];then
+			curarg="none"
+		fi
+		
+		error_print $0 $curarg
+		HELP=1
+		break
+	fi
+
+done
+
+if [ $SUPLOADER -eq 1 ]; then
+	update_deps
+fi
+
+if [ $PRODUCT -gt 1 ];then
+	error_print $0 "required argument host or robot not provided"
+	HELP=1
+fi 
+
+
+if [ $HELP -eq 1 ]; then
+echo "Perception Usage: $0 [($HOSTING|$PRODUCTS[ ip(ex: 192.168.7.2)]|$HELPING)|$RUNNING]
+Argument list:
+    ------------------------------------------------------
+        Arg        |  Description                         
+    ---------------|--------------------------------------
+     $HOSTING        | Compile the Perception code for and on the computer
+     $PRODUCTS       | Compile the code for the co-processor (Arg: Ip address of co-processor) if none then just compile
+     $HELPING        | Show this help menu
+     $RUNNING         | Flag to automatically run the compiled code after it's done (Both host and co-processor, must be last flag)
+     $JRUNNING     | Flag to just run the already compiled code
+     $PASSWORDS        | Set the ssh password to automatically push and run code on co-processor
+     $INSTALLING        | A quick and dirty dependency installer for the co-processor and its libraries
+     $UPLOADING | Flag to upload all the host (crossed compiled) shared libraries to the co-processor
+Perception compiler, developed by Titan Robotics
+"
+exit 0
+fi
+
+if [ $PRODUCT -eq 0 ]; then
+	SHOWMESSAGE="the host"
+else
+	SHOWMESSAGE="the co-processor"
+fi
+
+# visual seps
+SEPLINE="#####################################################"
+CENTERSEP="                 "
+
+header_print "INTRO"
+echo "$SEPLINE
+Welcome to the Perception packagin v0.3        
+You've selected to compile on $SHOWMESSAGE
+Getting started...
+$SEPLINE
+"
+
+if [ $PRODUCT -eq 0 ]; then
+	# skip the compiling and just run
+	if [ $AUTORUN -ne 2 ];then
+		header_print "\nCOMPILING"
+		printf "$SEPLINE\n\n${PURPLE}Cleaning previous product version...${NC}\n\n"
+		#make clean
+		echo "Currently not cleaning use 'make clean'"
+		CLEANRESULT=$?
+		printf "\n\n${PURPLE}Done Cleaning!\nAttempting to compile for the co-processor...${NC}\n"
+		PAST_DIR=$(pwd)
+		cd $BUILD_LOCATION
+		make
+		cd $PAST_DIR
+		COMPILERESULT=$?
+		printf "\n${PURPLE}Done Compiling!${NC}\n\n$SEPLINE\n\n"
+	fi
+else
+	# check to see if we are uploading to the co-processor
+	if [ $CHECKHOST -eq 0 ]; then
+		header_print "\nCONNECTION"
+		printf "$SEPLINE\n\nTesting the connecting to the co-processor...\n"
+		if [ $FOUNDDEVICE -eq 0 ]; then
+			# failed to connect to the device
+			printf "${RED}DISCONNECTED: $DEVICEADDR Did not respond, are you sure it is valid?${NC}\n\n$SEPLINE\n\n" # print error response
+			exit 1
+		fi
+
+		printf "${GREEN}CONNECTED: To the device, at: $DEVICEADDR${NC}\n\n$SEPLINE\n\n"
+	fi
+	
+	# skip compiling and just run
+	if [ $AUTORUN -ne 2 ]; then
+		header_print "\nCOMPILING"
+		printf "$SEPLINE\n\n${PURPLE}Cleaning previous product version...${NC}\n\n"
+		#make clean SLUMBER=true
+		echo "Currently not cleaning use 'make clean COPROCESSOR=true'"
+		CLEANRESULT=$?
+		printf "\n\n${PURPLE}Done Cleaning!\nAttempting to compile for the co-processor...${NC}\n"
+		PAST_DIR=$(pwd)
+		cd $BUILD_LOCATION
+		make COPROCESSOR=true
+		cd $PAST_DIR
+		COMPILERESULT=$?
+		printf "\n${PURPLE}Done Compiling!${NC}\n\n$SEPLINE\n\n"
+
+		# upload the compiled binarys
+		if [ $CHECKHOST -eq 0 ] && [ $FOUNDDEVICE -eq 1 ]; then
+			header_print "\nUPLOADING"
+			printf "$SEPLINE\n\n${PURPLE}Uploading binary files to the co-processor...${NC}\n"
+			
+			if [ ! -z "$PASSWORD" ]; then
+				printf "${PURPLE}Password already provided!\n\n${NC}"
+				sshpass -p "$PASSWORD" scp $PRODUCTFILE $PRODUCTUSER@$DEVICEADDR:$PUSHPRODUCTPATH
+				UPLOADRESULT=$?
+				printf "${PURPLE}Uploaded file!\n${NC}"
+			else	
+				printf "${PURPLE}Password not provided! One may need to be entered\n\n${NC}"
+				scp $PRODUCTFILE $PRODUCTUSER@$DEVICEADDR:$PUSHPRODUCTPATH
+				UPLOADRESULT=$?
+				printf "${PURPLE}Uploaded file!\n${NC}"
+			fi
+			printf "\n${PURPLE}Attempt completed!${NC}\n\n$SEPLINE\n\n"
+		fi
+	fi
+fi
+
+# Check to see if the compilation finished and automatically upload to the device
+if [ $AUTORUN -ne 2 ]; then
+	header_print "\nRESULTS"
+	printf "$SEPLINE\n\n"
+
+	printf "Cleaning: "
+	if [ $CLEANRESULT -eq 0 ]; then
+		printf "${GREEN} Success!${NC}\n"
+	else
+		printf "${RED} Failure!${NC}\n"
+	fi
+
+
+	printf "\nCompiling: "
+	if [ $COMPILERESULT -eq 0 ]; then
+		printf "${GREEN} Success!${NC}\n"
+	else
+		printf "${RED} Failure!${NC}\n"
+	fi
+
+
+	# if upload result was established
+	if [ ! -z $UPLOADRESULT ]; then
+		printf "\nUploading: "
+		if [ $UPLOADRESULT -eq 0 ]; then
+			printf "${GREEN} Success!${NC}\n"
+		else 
+			printf "${RED} Failure!${NC}\n"
+		fi
+	fi
+
+echo "
+Thanks for using the Perception packaging tool!  
+$SEPLINE
+"
+
+fi
+
+if [ $AUTORUN -gt 0 ];then
+	header_print "\nRUNNING"
+	printf "$SEPLINE\n"
+	if [ $PRODUCT -eq 1 ];then
+		printf "${PURPLE}Please wait... Running binary file on the co-processor${NC}\n"
+	fi
+
+	printf "$SEPLINE\n$CENTERSEP PROGRAM OUTPUT:\n$SEPLINE\n"
+
+	if [ $PRODUCT -eq 0 ];then
+		sudo $HOSTFILE # run the host file as root
+		RUNRESULT=$?
+	else
+		RUNSCRIPTONE=$PRODUCTUSER@$DEVICEADDR
+		RUNSCRIPTTWO="$PUSHPRODUCTPATH" # run the remote script as root
+		if [ ! -z "$PASSWORD" ]; then
+			sshpass -p "$PASSWORD" ssh -t $RUNSCRIPTONE "echo $PASSWORD | sudo -kS $RUNSCRIPTTWO" 
+			RUNRESULT=$?
+		else	
+			printf "${PURPLE}DEBUG HOST: Password not provided! One may need to be entered\n\n${NC}"
+			ssh -t $RUNSCRIPTONE "sudo $RUNSCRIPTTWO"
+			RUNRESULT=$?
+		fi
+		printf "${PURPLE}\n\nFINISHED RUNNING ON CO-PROCESSOR\n${NC}"
+	fi
+
+	printf "$SEPLINE\n\nRun: "
+	if [ $RUNRESULT -ne 0 ]; then
+		printf "${RED} Failure!${NC}"
+	else 
+		printf "${GREEN} Success!${NC}"
+	fi
+	printf "\n\n$SEPLINE\n\n"
+fi
+
+# end of script
