@@ -20,6 +20,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(MACE_DEMOS ON)
 
 add_subdirectory(MACE)
+add_subdirectory(ntcore-3.1.6)
 
 file(GLOB_RECURSE HEADER_FILES "include/*.h" "include/.hpp")
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
@@ -32,6 +33,8 @@ file(GLOB_RECURSE LIBRARY_DEBUG "lib/debug/*.lib")
 file(GLOB_RECURSE LIBRARY_RELEASE "lib/release/*.lib")
 
 target_link_libraries(copernicus debug ${LIBRARY_DEBUG} optimized ${LIBRARY_RELEASE})
+
+target_link_libraries(copernicus LINK_PUBLIC wpiutil)
 
 target_include_directories(copernicus PUBLIC "include/")
 
