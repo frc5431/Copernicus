@@ -1,6 +1,7 @@
 #include <mjpgclient.h>
 #include <Copernicus.h>
 #include <iostream>
+#include <networktables/NetworkTable.h>
 #include <MACE/MACE.h>
 
 using namespace mc;
@@ -19,6 +20,7 @@ gfx::ProgressBar flywheelRPM, targetRPM;
 
 //MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
 
+std::shared_ptr<NetworkTable> table;
 
 namespace titan {
 	void setTurretAngle(const float angle) {
@@ -118,9 +120,8 @@ void create() {
 	camera = gfx::Image();
 	camera.setWidth(1.0f);
 	camera.setHeight(1.0f);
-	cv::Mat image = cv::imread("D:\\Workspace\\copernicus\\res\\turretBase-overlay.png", CV_LOAD_IMAGE_COLOR);
-	std::cout << image.step / image.elemSize() << std::endl;
-	camera.setTexture(image);
+//	cv::Mat image = cv::imread("D:\\Workspace\\copernicus\\res\\turretBase-overlay.png", CV_LOAD_IMAGE_COLOR);
+//	camera.setTexture(image);
 	//camera.addComponent(comp);
 	group.addChild(camera);
 
@@ -223,6 +224,10 @@ int main(int argc, char** argv) {
 			udp_server udp_Server(io_service);
 			io_service.run();
 		});*/
+		NetworkTable::SetClientMode();
+		NetworkTable::SetTeam(5431);
+		table = NetworkTable::GetTable("copernicus");
+
 		os::WindowModule win = os::WindowModule(720, 720, "Copernicus");
 		win.setCreationCallback(&create);
 		win.setFPS(30);
@@ -235,6 +240,8 @@ int main(int argc, char** argv) {
 
 		while (MACE::isRunning()) {
 			MACE::update();
+
+			std::cout << table->GetBoolean("powered", false) << std::endl;
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(33));
 		}
