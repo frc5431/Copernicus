@@ -36,7 +36,7 @@
  */
 
 #include "../include/perception.hpp"
-#include "../include/gear.hpp"
+//#include "../include/gear.hpp"
 //bool protonect_shutdown = false; // Whether the running application should shut down.
 
 
@@ -62,189 +62,175 @@
 	cv::waitKey(1);
 }*/
 
-template<typename T>
-void MLOG(T toLog, bool err = false) {
-	Logger::Log(PERCEPTION_LOG_TAG, toLog, err);
-}
+namespace perception {
 
-//OLDSRC
-/*
-void onDepthFrame(kinect::DepthData depthData) {
-	//cv::Mat depth, converted, preprocessed;
+	boost::mutex perception_lock;
+	cv::Mat ok;
 
-	cv::Mat depthMat = cv::Mat(depthData.height, depthData.width, CV_32FC1, depthData.depthRaw) / 4500.0f;
-		cv::Mat threshed;
-		cv::Mat converted;
+	template<typename T>
+	void MLOG(T toLog, bool err = false) {
+		Logger::Log(PERCEPTION_LOG_TAG, toLog, err);
+	}
 
-		depthMat.convertTo(converted, CV_8UC3);
-		std::cout << "DEPTH1: " << depthMat.channels() << std::endl;
-		std::cout << "DEPTH2: " << converted.channels() << std::endl;
-		//std::cout << "DEPTH2: " << converted.depth() << std::endl;
+	cv::VideoCapture getCapture() {
+		while (1) {
+			try {
+				cv::VideoCapture cap = cv::VideoCapture(PERCEPTION_PULL_URL);
 
-		cv::threshold(depthMat, threshed, 0.0f, 1.0f, CV_THRESH_BINARY);
+				if (cap.isOpened()) return cap;
+			}
+			catch (const cv::Exception &err) {
+				MLOG(SW(""));
+				std::cout << "Failed initializing capture!" << std::endl;
+			}
+			catch (const std::exception &err) {
+				std::cout << "Failed initializing capture!" << std::endl;
+			}
+			catch (...) {
 
-		cv::imshow("depth", depthMat);
-		cv::waitKey(1);
-
-
-		//std::cout << "DEPTH3: " << threshed.depth() << std::endl;
-		//cv::GaussianBlur(threshed, threshed, cv::Size(5, 5), 1);
-	//cv::medianBlur(threshed, threshed, 7);
-
-	//processing::kinectDepth2Mat(depth, depthData, 4500.0f);
-	//depth.convertTo(converted, CV_8UC3);
-	//processing::kinectScalar(depth, fixedDepth);
-
-	//processing::preProcessing(converted, preprocessed);
-
-	//std::vector<processing::Target> targets = std::vector<processing::Target>();
-
-	//processing::processFrame(preprocessed, depthData, targets);
-
-	//MLOG(SW("GOT ") + SW(targets.size()) + SW(" POSSIBLE TARGETS!"));
-}*/
-
-cv::VideoCapture getCapture() {
-	while(1) {
-		try {
-			cv::VideoCapture cap = cv::VideoCapture(PERCEPTION_PULL_URL);
-
-			if(cap.isOpened()) return cap;
-		} catch(const cv::Exception &err) {
-			std::cout << "Failed initializing capture!" << std::endl;
-		} catch(const std::exception &err) {
-			std::cout << "Failed initializing capture!" << std::endl;
+			}
 		}
 	}
-}
 
-void pullLoop() {
-	std::cout << "STARTING" << std::endl;
+	void pullLoop() {
+		MLOG(SW("Started the perception pull loop!"));
 
-	boost::thread(Table::init);	
+		//OLDSRC
+		//boost::thread(Table::init);	
 
-	//Camera frame mat and other frames
-	cv::Mat camera_frame, threshed, contoured;
-	
-	//Video capture from mjpg stream
-	cv::VideoCapture axis_camera = getCapture();
+		//Camera frame mat and other frames
+		cv::Mat camera_frame, threshed, contoured;
 
-	//Set capture properties
-	axis_camera.set(CV_CAP_PROP_FPS, PROCESSING_CAMERA_FPS);
+		//Video capture from mjpg stream
+		cv::VideoCapture axis_camera = getCapture();
 
-	unsigned long empty_frame_count = 0;
+		//Set capture properties
+		axis_camera.set(CV_CAP_PROP_FPS, PROCESSING_CAMERA_FPS);
 
-	//Loop forevet
-	while(1) {
-		//table->GetNumber("OK", 0.0);
+		unsigned long empty_frame_count = 0;
 
-		//Pull new frame from capture stream (make sure you constantly pull from the buffer)
-		axis_camera.read(camera_frame);
+		//Loop forever
+		while (1) {
+			//table->GetNumber("OK", 0.0);
 
-		bool passed = true;
+			//Pull new frame from capture stream (make sure you constantly pull from the buffer)
+			axis_camera.read(camera_frame);
 
-		if(camera_frame.empty()) {
-			empty_frame_count++;
-			std::cout << "empty frame" << std::endl;
-			passed = false;
+			bool passed = true;
+
+			if (camera_frame.empty()) {
+				empty_frame_count++;
+				std::cout << "empty frame" << std::endl;
+				passed = false;
+			}
+
+			if (empty_frame_count > PERCEPTION_MAX_FAIL_COUNT) {
+				axis_camera = getCapture();
+
+				empty_frame_count = 0;
+
+				continue;
+			}
+
+			if (!passed) {
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
+				continue;
+			}
+
+			//Logger::LogWindow("Original", camera_frame);
+
+			cv::Mat threshed;
+
+			processing::preProcessing(camera_frame, threshed);
+
+			std::vector<processing::Target> targets;
+
+			processing::processFrame(threshed, targets, contoured);
+
+			unsigned int target_ind = 0;
+
+			//std::cout << "POSSIBLE TARGETS FOUND: " << targets.size() << std::endl;
+
+			/*for(processing::Target target : targets) {
+				std::cout << "IND: " << target_ind << "\n	AREA: "
+				<< target.area << "\n	WIDTH: " << target.width
+				<< "\n	HEIGHT: " << target.height << "\n	PERIM: "
+				<< target.perim << "\n	X: " << target.x << "\n	Y: "
+				<< target.y << "\n	SIDES: " << target.sides << std::endl;
+				target_ind++;
+			}*/
+
+			processing::Target final_target;
+
+			processing::processTargets(targets, final_target);
+
+			Table::updateTarget(final_target);
+
+			//Logger::LogWindow("Threshed", threshed);
+			//Logger::LogWindow("Contours", contoured);
+
+			boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
+
+			//cv::waitKey(20);
+
+			//if(cv::waitKey(30) >= 255) break;
+
 		}
 
-		if(empty_frame_count > PERCEPTION_MAX_FAIL_COUNT) {
-			axis_camera = getCapture();
-			
-			empty_frame_count = 0;
-			
-			continue;
-		}
+		cv::destroyAllWindows();
+	}
 
-		if(!passed) {
-			cv::waitKey(1);
-			continue;
-		}
-
-		Logger::LogWindow("Original", camera_frame);
-
-		cv::Mat threshed;
-
-		processing::preProcessing(camera_frame, threshed);
-
-		std::vector<processing::Target> targets;
-
-		processing::processFrame(threshed, targets, contoured);
-
-		unsigned int target_ind = 0;
-
-		//std::cout << "POSSIBLE TARGETS FOUND: " << targets.size() << std::endl;
-
-		/*for(processing::Target target : targets) {
-			std::cout << "IND: " << target_ind << "\n	AREA: "
-			<< target.area << "\n	WIDTH: " << target.width 
-			<< "\n	HEIGHT: " << target.height << "\n	PERIM: " 
-			<< target.perim << "\n	X: " << target.x << "\n	Y: " 
-			<< target.y << "\n	SIDES: " << target.sides << std::endl;
-			target_ind++;
-		}*/
-
-		processing::Target final_target;
-
-		processing::processTargets(targets, final_target);
-
-		Table::updateTarget(final_target);
-
-		Logger::LogWindow("Threshed", threshed);
-		Logger::LogWindow("Contours", contoured);
-
-		cv::waitKey(20);
-
-		//if(cv::waitKey(30) >= 255) break;
-
-    }
-
-    cv::destroyAllWindows();
-}
+	void startPerceptionLoop() {
+		MLOG(SW("Starting the perception loop..."));
+		boost::thread pullLoopThread(pullLoop);
+	}
 
 
-//Main code
-int mainCODEPERCEPTION() {
-	pullLoop(); //Start the Mjpg client pullLoop
 
-	//OLDSRC
-	//Start the perception logger
-	/*Logger::Init();
+	/*
+	//Main code
+	int mainCODEPERCEPTION() {
+		pullLoop(); //Start the Mjpg client pullLoop
 
-	MLOG("Starting vision network table");
-	table = NetworkTable::GetTable(PERCEPTION_TABLE_NAME);
+		//OLDSRC
+		//Start the perception logger
+		/*Logger::Init();
 
-	//Kinect object initializer
-	kinect::Kinect kinect;
+		MLOG("Starting vision network table");
+		table = NetworkTable::GetTable(PERCEPTION_TABLE_NAME);
 
-	MLOG("Attempting to connect to the Kinect!");
-	//Connect to the Kinect
-	kinect.loadKinect();
+		//Kinect object initializer
+		kinect::Kinect kinect;
 
-	//Bitwise frame puller example: KINECT_DEPTH | KINECT_COLOR | KINECT_IR
-	kinect.setFrames(KINECT_DEPTH);
+		MLOG("Attempting to connect to the Kinect!");
+		//Connect to the Kinect
+		kinect.loadKinect();
 
-	MjpgServer server(8081); // Start server on port 8081
-	server.setQuality(1); // Set jpeg quality to 1 (0 - 100)
-	server.setResolution(640, 320); // Set stream resolution to 1280x720
-	server.setFPS(30); // Set target fps to 15
-	server.setMaxConnections(3);
-	server.setName("Perception Server");
-	server.attach(pullFrame);
+		//Bitwise frame puller example: KINECT_DEPTH | KINECT_COLOR | KINECT_IR
+		kinect.setFrames(KINECT_DEPTH);
 
-	//Attach the frame callbacks
-	kinect.attachRGB(onColorFrame);
-	kinect.attachDepth(onDepthFrame);
+		MjpgServer server(8081); // Start server on port 8081
+		server.setQuality(1); // Set jpeg quality to 1 (0 - 100)
+		server.setResolution(640, 320); // Set stream resolution to 1280x720
+		server.setFPS(30); // Set target fps to 15
+		server.setMaxConnections(3);
+		server.setName("Perception Server");
+		server.attach(pullFrame);
 
-	//Start the kinect loop
-	kinect.startLoop();
-	//server.run(); //Run stream forever (until fatal)
+		//Attach the frame callbacks
+		kinect.attachRGB(onColorFrame);
+		kinect.attachDepth(onDepthFrame);
 
-	cv::destroyAllWindows();
+		//Start the kinect loop
+		kinect.startLoop();
+		//server.run(); //Run stream forever (until fatal)
 
-	//Free the perception logger
-	Logger::Free();*/
+		cv::destroyAllWindows();
 
-	return (0);
+		//Free the perception logger
+		Logger::Free();
+
+		return (0);
+	}*/
+
 }

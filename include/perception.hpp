@@ -58,6 +58,9 @@
 
 //BOOST INCLUDES
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+#include <boost/bind.hpp>
 
 //OPENCV INCLUDES
 #include <opencv2/core/core.hpp>
@@ -79,5 +82,15 @@
 #define PERCEPTION_TABLE_NAME 		"perception" //The network table name
 #define PERCEPTION_PULL_URL 		"http://10.54.31.25/mjpg/video.mjpg"
 #define PERCEPTION_MAX_FAIL_COUNT	30 //Maximum empty frame count
+#define PERCEPTION_PULL_LOOP_DELAY	30 //The milliseconds to wait before pulling the new frame
+
+namespace perception {
+	extern boost::mutex perception_lock;
+
+	cv::VideoCapture getCapture();
+
+	void pullLoop();
+	void startPerceptionLoop();
+}
 
 #endif /* INCLUDE_PERCEPTION_HPP_ */
