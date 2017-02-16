@@ -65,8 +65,8 @@ int mainCODE(){
 					x_valL = center[1].x;
 					x_valR = center[0].x;
 				}
-				if(x_valR == 666
-				tarDif = std::abs(x_valL-x_valR);
+				if(x_valR == 666)
+					tarDif = std::abs(x_valL-x_valR);
 			
 			}
 			

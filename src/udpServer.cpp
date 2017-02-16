@@ -1,5 +1,5 @@
 #include "../include/udpServer.hpp"
-
+/*
 		udp_server::udp_server():
             socket_(io_service,udp::endpoint(udp::v4(),25566)){
                 start_recieve();

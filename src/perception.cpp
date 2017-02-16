@@ -95,6 +95,8 @@ namespace perception {
 	void pullLoop() {
 		MLOG(SW("Started the perception pull loop!"));
 
+		Table::init();
+
 		//OLDSRC
 		//boost::thread(Table::init);	
 

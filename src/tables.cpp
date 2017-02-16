@@ -21,8 +21,7 @@
 #define PERCEPTION_TABLES_NAME "vision"
 #define PERCEPTION_TABLES_PORT 5000
 
-/*NetworkTable::SetClientMode();
-NetworkTable::SetTeam(5431);
+/*
 NetworkTable::SetIPAddress("10.54.31.23");
 */
 
@@ -32,11 +31,13 @@ namespace Table {
 	int dist_val;
 	float horz_angle;
 	float vert_angle;
+
+	std::shared_ptr<NetworkTable> table;
 	//boost::asio::io_service io;
 	//boost::asio::ip::udp::socket socket(io);
 	//boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::address::from_string("127.0.0.1"),PERCEPTION_TABLES_PORT);
 
-	udp_server server;
+	//udp_server server;
 	//void send(){	
 		//std::array<int,5> turretAngle = {x_val,y_val,dist_val,horz_angle,vert_angle};
 		//socket.open(boost::asio::ip::udp::v4());
@@ -44,21 +45,12 @@ namespace Table {
 	//}
 
 	void init() {
-		server.setPressure(1.2);
-		server.setHighGear(true);
-		server.setBottomIntake(false);
-		server.setStream(true);
-		server.setCrosshairOffset(3.4);
-		server.setTurretAngle(666);
-		server.setRPM(7);
-		server.setTopIntake(false);
-		server.setLeftRPM(8);
-		server.setRightRPM(9);
-		server.setHoldsGear(true);
-		server.setMode(10);
-		server.setPowered(11);
-		server.createJson();
-		server.serverInit();
+		NetworkTable::SetClientMode();
+		NetworkTable::SetTeam(5431);
+
+		std::cout << "hi";
+
+		table = NetworkTable::GetTable("vision");
 
 		//boost::thread serveThread(boost::bind(&udp_server::serverInit, &server));
 
@@ -77,14 +69,15 @@ namespace Table {
 			horz_angle = 666;
 		}
 
+		/*
 		server.setTurretAngle(horz_angle);
-		server.createJson();
+		server.createJson();*/
 
-		/*table->PutNumber("x", x_val);
+		table->PutNumber("x", x_val);
 		table->PutNumber("y", y_val);
 		table->PutNumber("distance", dist_val);
 		table->PutNumber("horz_angle", horz_angle);
-		table->PutNumber("vert_angle", vert_angle);*/
+		table->PutNumber("vert_angle", vert_angle);
 	}
 
 	template<typename T>

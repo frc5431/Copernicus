@@ -1,6 +1,7 @@
 #ifndef UDP_SERVER_H
 #define UDP_SERVER_H
 
+/*
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -88,7 +89,7 @@ class udp_server{
         udp::endpoint remote_endpoint;
         array<char,1>recv_buffer_;
 
-};
+};*/
 
 #endif
 

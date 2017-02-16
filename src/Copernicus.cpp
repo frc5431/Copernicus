@@ -2,6 +2,7 @@
 #include <Copernicus.h>
 #include <iostream>
 #include <networktables/NetworkTable.h>
+#include <perception.hpp>
 #include <MACE/MACE.h>
 
 using namespace mc;
@@ -215,6 +216,8 @@ void create() {
 
 int main(int argc, char** argv) {
 	try {
+		perception::startPerceptionLoop();
+
 		NetworkTable::SetClientMode();
 		NetworkTable::SetTeam(5431);
 		table = NetworkTable::GetTable("copernicus");

@@ -54,6 +54,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/bind.hpp>
 
+#include <MACE/Utility/Math.h>
+
 //STANDARD INCLUDES
 #include <functional>
 #include <memory>
@@ -116,7 +118,7 @@ cv::Size(PROCESSING_CAMERA_WIDTH, PROCESSING_CAMERA_HEIGHT), 0)*/
 #define PROCESSING_CAMERA_HALF_VERT				(PROCESSING_CAMERA_VFOV / 2) //Vertical camera split height
 #define PROCESSING_CAMERA_HEIGHT_DIFF			(PROCESSING_BOILER_HEIGHT - PROCESSING_CAMERA_R_HEIGHT) //The camera delta difference from the boiler height and camera ground height
 #define PROCESSING_CAMERA_REAL_ANGLE			(180 - (PROCESSING_CAMERA_ANGLE + (90 - PROCESSING_CAMERA_HALF_VERT) + PROCESSING_CAMERA_VFOV)) // 15//;	(PROCESSING_CAMERA_ANGLE - PROCESSING_CAMERA_HALF_VERT) //The camera displacement angle in real life
-#define PROCESSING_GET_DISTANCE(X)				(PROCESSING_CAMERA_HEIGHT_DIFF / (tan((M_PI * (X + PROCESSING_CAMERA_REAL_ANGLE)) / 180))) - PROCESSING_BOILER_OFFSET //Get the distance of the robot from the tower
+#define PROCESSING_GET_DISTANCE(X)				(PROCESSING_CAMERA_HEIGHT_DIFF / (tan((mc::math::pi() * (X + PROCESSING_CAMERA_REAL_ANGLE)) / 180))) - PROCESSING_BOILER_OFFSET //Get the distance of the robot from the tower
 #define PROCESSING_GET_DEGREES(X)				(X - PROCESSING_CAMERA_HALF_SCREEN) * PROCESSING_CAMERA_DEG_PIXEL //Get current angle horizontally
 #define PROCESSING_GET_VDEGREES(X)				(X * PROCESSING_CAMERA_VDEG_PIXEL) //Get current angle vertically
 
