@@ -1,7 +1,17 @@
 #include "../include/udpServer.hpp"
-/*
-		udp_server::udp_server():
-            socket_(io_service,udp::endpoint(udp::v4(),25566)){
+
+		udp_server::udp_server() {
+			/*boost::asio::io_service io_service;
+			boost::asio::ip::tcp::resolver resolver(io_service);
+			boost::asio::ip::tcp::resolver::query query(UDP_IP_ADDR, "");
+for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
+                            i != boost::asio::ip::tcp::resolver::iterator();
+                            ++i)
+{
+    boost::asio::ip::tcp::endpoint end = *i;
+    std::cout << end.address() << ' ';*/
+}
+            socket_ = udp::socket(io_service,udp::endpoint(udp::v4(),UDP_PORT)){
                 start_recieve();
         }
 
@@ -24,7 +34,7 @@
            StringBuffer message;
            Writer<StringBuffer> writer(message);
            writer.StartObject();
-           writer.Key("pressure");
+           /*writer.Key("pressure");
            writer.Double(pressure);
            writer.Key("highGear");
            writer.Bool(highGear);
@@ -33,10 +43,10 @@
            writer.Key("stream");
            writer.Bool(stream);
            writer.Key("crosshairOffset");
-           writer.Double(crosshairOffset);
+           writer.Double(crosshairOffset);*/
            writer.Key("turretAngle");
            writer.Double(turretAngle);
-           writer.Key("RPM");
+           /*writer.Key("RPM");
            writer.Int(RPM);
            writer.Key("topIntake");
            writer.Bool(topIntake);
@@ -49,7 +59,7 @@
            writer.Key("mode");
            writer.Int(mode);
            writer.Key("powered");
-           writer.Bool(powered);
+           writer.Bool(powered);*/
            writer.EndObject();
            finalString = message.GetString();
            }
