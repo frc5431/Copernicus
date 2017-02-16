@@ -11,7 +11,7 @@ for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
     boost::asio::ip::tcp::endpoint end = *i;
     std::cout << end.address() << ' ';*/
 }
-            socket_ = udp::socket(io_service,udp::endpoint(udp::v4(),UDP_PORT)){
+            socket_ = udp::socket(boost::asio::io_service,udp::endpoint(udp::v4(),UDP_PORT)){
                 start_recieve();
         }
 

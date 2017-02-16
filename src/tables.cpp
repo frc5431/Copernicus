@@ -73,10 +73,11 @@ namespace Table {
 		server.setTurretAngle(horz_angle);
 		server.createJson();*/
 
+		table->SetUpdateRate(0.01);
 		table->PutNumber("x", x_val);
 		table->PutNumber("y", y_val);
 		table->PutNumber("distance", dist_val);
-		table->PutNumber("horz_angle", horz_angle);
+		table->PutNumber("horz_angle", table->GetNumber("horz_angle", 0.0) + horz_angle);
 		table->PutNumber("vert_angle", vert_angle);
 	}
 
