@@ -16,11 +16,8 @@
 #include <iostream>
 
 #define UDP_SLOCK boost::mutex::scoped_lock locks(udpLock)
-
+#define UDP_PORT 25565
 using boost::asio::ip::udp;
-using namespace std;
-using namespace rapidjson;
-
 
 class udp_server{
     public:
@@ -44,7 +41,7 @@ class udp_server{
 
 	private:
 		boost::asio::io_service io_service;
-        thread serverThread;
+        std::thread serverThread;
         double pressure;
         bool highGear;
         bool bottomIntake;
@@ -58,7 +55,7 @@ class udp_server{
         bool holdsGear;
         int mode;
         bool powered;
-        string finalString;
+        std::string finalString;
         rapidjson::Document document;
 		boost::mutex udpLock;
 
@@ -73,7 +70,7 @@ class udp_server{
 
         void handle_recieve(const boost::system::error_code& error,size_t){
             if(!error || error == boost::asio::error::message_size){
-                boost::shared_ptr<string> message(new string (finalString));
+				boost::shared_ptr < std::string > message(new std::string(finalString));
                 socket_.async_send_to(
                 boost::asio::buffer(*message),remote_endpoint,
                 boost::bind(&udp_server::handle_send,this,message,
@@ -81,13 +78,13 @@ class udp_server{
                 start_recieve();
             }
         }
-        void handle_send(boost::shared_ptr<string>,
+        void handle_send(boost::shared_ptr<std::string>,
             const boost::system::error_code&, size_t){
         }
 
         udp::socket socket_;
         udp::endpoint remote_endpoint;
-        array<char,1>recv_buffer_;
+		std::array<char, 1>recv_buffer_;
 
 };
 

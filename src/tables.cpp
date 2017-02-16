@@ -37,7 +37,7 @@ namespace Table {
 	//boost::asio::ip::udp::socket socket(io);
 	//boost::asio::ip::udp::endpoint endpoint(boost::asio::ip::address::from_string("127.0.0.1"),PERCEPTION_TABLES_PORT);
 
-	//udp_server server;
+	udp_server server;
 	//void send(){	
 		//std::array<int,5> turretAngle = {x_val,y_val,dist_val,horz_angle,vert_angle};
 		//socket.open(boost::asio::ip::udp::v4());

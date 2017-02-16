@@ -216,7 +216,7 @@ void create() {
 
 int main(int argc, char** argv) {
 	try {
-		perception::startPerceptionLoop();
+		//perception::startPerceptionLoop();
 
 		NetworkTable::SetClientMode();
 		NetworkTable::SetTeam(5431);
