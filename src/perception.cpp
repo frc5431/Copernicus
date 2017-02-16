@@ -95,10 +95,9 @@ namespace perception {
 	void pullLoop() {
 		MLOG(SW("Started the perception pull loop!"));
 
-		Table::init();
+		//Table::init();
 
-		//OLDSRC
-		//boost::thread(Table::init);	
+		boost::thread(Table::init);	
 
 		//Camera frame mat and other frames
 		cv::Mat camera_frame, threshed, contoured;
