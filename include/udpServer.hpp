@@ -1,7 +1,6 @@
 #ifndef UDP_SERVER_H
 #define UDP_SERVER_H
 
-/*
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
@@ -16,6 +15,8 @@
 #include <iostream>
 
 #define UDP_SLOCK boost::mutex::scoped_lock locks(udpLock)
+#define UDP_IP_ADDR "roborio-5431-frc.local"
+#define UDP_PORT 25566
 
 using boost::asio::ip::udp;
 using namespace std;
@@ -89,7 +90,7 @@ class udp_server{
         udp::endpoint remote_endpoint;
         array<char,1>recv_buffer_;
 
-};*/
+};
 
 #endif
 
