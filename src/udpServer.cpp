@@ -16,7 +16,7 @@ for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
         }*/
 
 	udp_server::udp_server():
-		socket_(boost::asio::io_service,udp::endpoint(udp::v4(),UDP_PORT)){
+		socket_(io_service,udp::endpoint(udp::v4(),UDP_PORT)){
                 start_recieve();
         }
 
@@ -36,8 +36,8 @@ for(boost::asio::ip::tcp::resolver::iterator i = resolver.resolve(query);
 
 		void udp_server::createJson(){
 		   UDP_SLOCK;
-           StringBuffer message;
-           Writer<StringBuffer> writer(message);
+		   rapidjson::StringBuffer message;
+		   rapidjson::Writer<rapidjson::StringBuffer> writer(message);
            writer.StartObject();
            /*writer.Key("pressure");
            writer.Double(pressure);

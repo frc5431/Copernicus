@@ -61,10 +61,11 @@ class udp_server{
 
 		void start_recieve(){
             //cout<<"Waiting"<<endl;
-            socket_.async_receive_from(
-            boost::asio::buffer(recv_buffer_),remote_endpoint,
-            boost::bind(&udp_server::handle_recieve,this,
-            boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+			socket_.async_receive_from(
+				boost::asio::buffer(recv_buffer_), remote_endpoint,
+				boost::bind(&udp_server::handle_recieve, this,
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(30));
         }
 
