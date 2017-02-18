@@ -29,6 +29,8 @@ add_executable(copernicus ${SOURCE_FILES} ${HEADER_FILES})
 
 target_compile_definitions(copernicus PUBLIC RESOURCE_FOLDER="${PROJECT_SOURCE_DIR}/res")
 
+target_compile_options(wpiutil PRIVATE "$<$<CONFIG:DEBUG>:/MDd>" "$<$<CONFIG:RELEASE>:/MD>")
+
 file(GLOB_RECURSE LIBRARY_DEBUG "lib/debug/*.lib")
 file(GLOB_RECURSE LIBRARY_RELEASE "lib/release/*.lib")
 
