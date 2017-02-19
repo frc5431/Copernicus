@@ -30,11 +30,11 @@ namespace titan {
 
 	void setHighGear(const bool highGear) {
 		if (highGear) {
-		//	driveGear.setText(L"H");
+			driveGear.setText(L"H");
 			driveGear.getTexture().setPaint(Colors::RED);
 		}
 		else {
-		//	driveGear.setText(L"L");
+			driveGear.setText(L"L");
 			driveGear.getTexture().setPaint(Colors::GREEN);
 		}
 	}
@@ -46,7 +46,7 @@ namespace titan {
 		}
 		else {
 			floorIntake.getTexture().setPaint(Colors::RED);
-			floorIntakeText.setText(L"NOT INTAKING\nON FLOOR");
+			floorIntakeText.setText(L"FLOOR NOT INTAKING");
 		}
 	}
 
@@ -57,7 +57,7 @@ namespace titan {
 		}
 		else {
 			topIntake.getTexture().setPaint(Colors::RED);
-			topIntakeText.setText(L"NOT INTAKING\nON TOP");
+			topIntakeText.setText(L"TOP NOT INTAKING");
 		}
 	}
 
@@ -91,7 +91,7 @@ public:
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
-//		frame = client.getFrameMat();
+		//frame = client.getFrameMat();
 
 		if (!frame.empty()) {
 			e->makeDirty();
@@ -103,9 +103,9 @@ public:
 
 		if (!frame.empty()) {
 			gfx::ColorAttachment& c = en->getTexture();
-			//c.load(frame);
+			c.load(frame);
 
-		//	en->setTexture(c);
+		en->setTexture(c);
 		}
 	}
 	void destroy(gfx::Entity*) {
