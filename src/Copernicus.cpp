@@ -2,6 +2,7 @@
 #include <Copernicus.h>
 #include <iostream>
 #include <networktables/NetworkTable.h>
+#include <perception.hpp>
 #include <MACE/MACE.h>
 
 using namespace mc;
@@ -31,33 +32,33 @@ namespace titan {
 	void setHighGear(const bool highGear) {
 		if (highGear) {
 			driveGear.setText(L"H");
-			driveGear.getTexture().setPaint(Colors::RED);
+			driveGear.setTexture(Colors::RED);
 		}
 		else {
 			driveGear.setText(L"L");
-			driveGear.getTexture().setPaint(Colors::GREEN);
+			driveGear.setTexture(Colors::GREEN);
 		}
 	}
 
 	void setFloorIntake(const bool intaking) {
 		if (intaking) {
-			floorIntake.getTexture().setPaint(Colors::GREEN);
+			floorIntake.setTexture(Colors::GREEN);
 			floorIntakeText.setText(L"FLOOR INTAKING");
 		}
 		else {
-			floorIntake.getTexture().setPaint(Colors::RED);
-			floorIntakeText.setText(L"FLOOR NOT INTAKING");
+			floorIntake.setTexture(Colors::RED);
+			floorIntakeText.setText(L"NOT INTAKING\nON FLOOR");
 		}
 	}
 
 	void setTopIntake(const bool intaking) {
 		if (intaking) {
-			topIntake.getTexture().setPaint(Colors::GREEN);
+			topIntake.setTexture(Colors::GREEN);
 			topIntakeText.setText(L"TOP INTAKING");
 		}
 		else {
-			topIntake.getTexture().setPaint(Colors::RED);
-			topIntakeText.setText(L"TOP NOT INTAKING");
+			topIntake.setTexture(Colors::RED);
+			topIntakeText.setText(L"NOT INTAKING\nON TOP");
 		}
 	}
 
@@ -91,7 +92,7 @@ public:
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
-		//frame = client.getFrameMat();
+//		frame = client.getFrameMat();
 
 		if (!frame.empty()) {
 			e->makeDirty();
@@ -105,8 +106,16 @@ public:
 			gfx::ColorAttachment& c = en->getTexture();
 			c.load(frame);
 
-		en->setTexture(c);
+		//	en->setTexture(c);
 		}
+
+		titan::setFloorIntake(table->GetBoolean("floorIntake", false));
+		titan::setFlywheelRPM(table->GetNumber("flywheelRPM", 0.0));
+		titan::setGearIn(table->GetBoolean("holdsGear", false));
+		titan::setHighGear(table->GetBoolean("highGear", false));
+		titan::setTargetRPM(table->GetNumber("targetRPM", 0.0));
+		titan::setTopIntake(table->GetBoolean("topIntake", false));
+		titan::setTurretAngle(table->GetNumber("turretAngle", 0.0));
 	}
 	void destroy(gfx::Entity*) {
 	};
@@ -207,6 +216,8 @@ void create() {
 
 int main(int argc, char** argv) {
 	try {
+		perception::startPerceptionLoop();
+
 		NetworkTable::SetClientMode();
 		NetworkTable::SetTeam(5431);
 		table = NetworkTable::GetTable("copernicus");
@@ -224,15 +235,7 @@ int main(int argc, char** argv) {
 		while (MACE::isRunning()) {
 			MACE::update();
 
-			titan::setFloorIntake(table->GetBoolean("floorIntake", false));
-			titan::setFlywheelRPM(table->GetNumber("flywheelRPM", 0.0));
-			titan::setGearIn(table->GetBoolean("holdsGear", false));
-			titan::setHighGear(table->GetBoolean("highGear", false));
-			titan::setTargetRPM(table->GetNumber("targetRPM", 0.0));
-			titan::setTopIntake(table->GetBoolean("topIntake", false));
-			titan::setTurretAngle(table->GetNumber("turretAngle", 0.0));
-			
-			os::wait(33);
+			std::this_thread::sleep_for(std::chrono::milliseconds(33));
 		}
 		MACE::destroy();
 	}
