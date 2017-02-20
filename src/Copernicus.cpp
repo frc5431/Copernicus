@@ -82,8 +82,9 @@ namespace titan {
 	}
 }
 
+cv::Mat frame;
+
 class CameraComponent : public gfx::Component {
-	cv::Mat frame;
 public:
 	void init(gfx::Entity* e) {
 		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
@@ -92,23 +93,9 @@ public:
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
-//		frame = client.getFrameMat();
-
-		if (!frame.empty()) {
-			e->makeDirty();
-		}
 		return false;
 	}//screw oliver
 	void render(gfx::Entity* e) {
-		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
-
-		if (!frame.empty()) {
-			gfx::ColorAttachment& c = en->getTexture();
-			c.load(frame);
-
-		//	en->setTexture(c);
-		}
-
 		titan::setFloorIntake(table->GetBoolean("floorIntake", false));
 		titan::setFlywheelRPM(table->GetNumber("flywheelRPM", 0.0));
 		titan::setGearIn(table->GetBoolean("holdsGear", false));
@@ -117,9 +104,59 @@ public:
 		titan::setTopIntake(table->GetBoolean("topIntake", false));
 		titan::setTurretAngle(table->GetNumber("turretAngle", 0.0));
 	}
+
+	void clean(gfx::Entity* e) {
+		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
+
+		if (!frame.empty()) {
+			gfx::ColorAttachment& c = en->getTexture();
+			/*
+			c.bind();
+
+			c.resetPixelStorage();
+
+			std::vector<unsigned char> data = std::vector<unsigned char>();
+
+			int cn = frame.channels();
+
+			for (int i = 0; i < frame.rows; ++i)
+			{
+				for (int j = 0; j < frame.cols; ++j)
+				{
+						cv::Vec3b v = frame.at<cv::Vec3b>(i, j);
+						data.push_back(v[2]);
+						data.push_back(v[1]);
+						data.push_back(v[0]);
+				}
+			}
+
+			gfx::ogl::checkGLError(__LINE__, __FILE__);
+
+			//c.setData(&data[0], frame.rows, frame.cols, GL_UNSIGNED_BYTE, GL_RGB, GL_RGBA);				//setData(mat.ptr(), mat.cols, mat.rows, type, colorFormat, GL_RGBA);
+			c.load(Colors::GREEN);
+
+			c.setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			c.setParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			std::cout << en->getTexture().getID()<<std::endl;
+
+			en->setTexture(c);*/
+
+			//c.load(Colors::GREEN);
+
+			gfx::ColorAttachment col = Colors::GREEN;
+			en->setTexture(col);
+		}
+	}
+
 	void destroy(gfx::Entity*) {
 	};
 };
+
+void perception::OnTurretFrame(cv::Mat& m) {
+	m.copyTo(frame);
+	camera.makeDirty();
+}
 
 CameraComponent comp;
 
@@ -128,6 +165,9 @@ void create() {
 	camera.setWidth(1.0f);
 	camera.setHeight(1.0f);
 	camera.addComponent(comp);
+
+	cv::Mat mat = cv::imread(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
+	camera.setTexture(mat);
 	group.addChild(camera);
 
 	turretBaseAngle = gfx::Image(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
@@ -235,7 +275,7 @@ int main(int argc, char** argv) {
 		while (MACE::isRunning()) {
 			MACE::update();
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(33));
+			mc::os::wait(33);
 		}
 		MACE::destroy();
 	}

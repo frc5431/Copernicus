@@ -65,7 +65,9 @@
 namespace perception {
 
 	boost::mutex perception_lock;
-	cv::Mat ok;
+	cv::Mat turret_frame;
+	bool turret_has_frame = true;
+
 
 	template<typename T>
 	void MLOG(T toLog, bool err = false) {
@@ -80,14 +82,13 @@ namespace perception {
 				if (cap.isOpened()) return cap;
 			}
 			catch (const cv::Exception &err) {
-				MLOG(SW(""));
-				std::cout << "Failed initializing capture!" << std::endl;
+				MLOG(SW("Failed initializing capture!"));
 			}
 			catch (const std::exception &err) {
-				std::cout << "Failed initializing capture!" << std::endl;
+				MLOG(SW("Failed initializing capture!"));
 			}
 			catch (...) {
-
+				MLOG(SW("Failed initializing capture!"));
 			}
 		}
 	}
@@ -171,6 +172,16 @@ namespace perception {
 			//Logger::LogWindow("Threshed", threshed);
 			//Logger::LogWindow("Contours", contoured);
 
+			{
+				boost::mutex::scoped_lock locks(perception_lock);
+				if (!turret_has_frame) {
+					camera_frame.copyTo(turret_frame);
+					turret_has_frame = true;
+				}
+				
+				OnTurretFrame(camera_frame);
+			}
+
 			boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
 
 			//cv::waitKey(20);
@@ -187,7 +198,16 @@ namespace perception {
 		boost::thread pullLoopThread(pullLoop);
 	}
 
+	bool hasTurretFrame() {
+		boost::mutex::scoped_lock locks(perception_lock);
+		return turret_has_frame;
+	}
 
+	void getTurretFrame(cv::Mat &frame) {
+		boost::mutex::scoped_lock locks(perception_lock);
+		frame = turret_frame;
+		turret_has_frame = false;
+	}
 
 	/*
 	//Main code

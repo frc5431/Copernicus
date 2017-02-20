@@ -91,6 +91,10 @@ namespace perception {
 
 	void pullLoop();
 	void startPerceptionLoop();
+	
+	void getTurretFrame(cv::Mat &);
+	
+	void OnTurretFrame(cv::Mat &);
 }
 
 #endif /* INCLUDE_PERCEPTION_HPP_ */
