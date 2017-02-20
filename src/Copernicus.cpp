@@ -43,22 +43,22 @@ namespace titan {
 	void setFloorIntake(const bool intaking) {
 		if (intaking) {
 			floorIntake.setTexture(Colors::GREEN);
-			floorIntakeText.setText(L"FLOOR INTAKING");
+			floorIntakeText.setText(L"INTAKING");
 		}
 		else {
 			floorIntake.setTexture(Colors::RED);
-			floorIntakeText.setText(L"NOT INTAKING\nON FLOOR");
+			floorIntakeText.setText(L"NOT INTAKING");
 		}
 	}
 
 	void setTopIntake(const bool intaking) {
 		if (intaking) {
 			topIntake.setTexture(Colors::GREEN);
-			topIntakeText.setText(L"TOP INTAKING");
+			topIntakeText.setText(L"FEEDING");
 		}
 		else {
 			topIntake.setTexture(Colors::RED);
-			topIntakeText.setText(L"NOT INTAKING\nON TOP");
+			topIntakeText.setText(L"NOT FEEDING");
 		}
 	}
 
@@ -90,9 +90,11 @@ public:
 		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
 		gfx::ColorAttachment c = gfx::ColorAttachment();
 		c.init();
+		c.load(Colors::DARK_RED);
 		en->setTexture(c);
 	}
 	bool update(gfx::Entity* e) {
+		//e->makeDirty();
 		return false;
 	}//screw oliver
 	void render(gfx::Entity* e) {
@@ -110,42 +112,9 @@ public:
 
 		if (!frame.empty()) {
 			gfx::ColorAttachment& c = en->getTexture();
-			/*
-			c.bind();
+			c.load(frame);
 
-			c.resetPixelStorage();
-
-			std::vector<unsigned char> data = std::vector<unsigned char>();
-
-			int cn = frame.channels();
-
-			for (int i = 0; i < frame.rows; ++i)
-			{
-				for (int j = 0; j < frame.cols; ++j)
-				{
-						cv::Vec3b v = frame.at<cv::Vec3b>(i, j);
-						data.push_back(v[2]);
-						data.push_back(v[1]);
-						data.push_back(v[0]);
-				}
-			}
-
-			gfx::ogl::checkGLError(__LINE__, __FILE__);
-
-			//c.setData(&data[0], frame.rows, frame.cols, GL_UNSIGNED_BYTE, GL_RGB, GL_RGBA);				//setData(mat.ptr(), mat.cols, mat.rows, type, colorFormat, GL_RGBA);
-			c.load(Colors::GREEN);
-
-			c.setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			c.setParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-			std::cout << en->getTexture().getID()<<std::endl;
-
-			en->setTexture(c);*/
-
-			//c.load(Colors::GREEN);
-
-			gfx::ColorAttachment col = Colors::GREEN;
-			en->setTexture(col);
+			en->setTexture(c);
 		}
 	}
 
@@ -165,9 +134,6 @@ void create() {
 	camera.setWidth(1.0f);
 	camera.setHeight(1.0f);
 	camera.addComponent(comp);
-
-	cv::Mat mat = cv::imread(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
-	camera.setTexture(mat);
 	group.addChild(camera);
 
 	turretBaseAngle = gfx::Image(RESOURCE_FOLDER + std::string("/turretBase-overlay.png"));
