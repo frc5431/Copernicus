@@ -45,12 +45,10 @@ namespace Table {
 	//}
 
 	void init() {
-		NetworkTable::SetClientMode();
-		NetworkTable::SetTeam(5431);
+	//	NetworkTable::SetClientMode();
+	//	NetworkTable::SetTeam(5431);
 
-		std::cout << "hi";
-
-		table = NetworkTable::GetTable("vision");
+	//	table = NetworkTable::GetTable("vision");
 
 		//boost::thread serveThread(boost::bind(&udp_server::serverInit, &server));
 
@@ -72,12 +70,14 @@ namespace Table {
 		/*
 		server.setTurretAngle(horz_angle);
 		server.createJson();*/
-
+		
+		/*
 		table->PutNumber("x", x_val);
 		table->PutNumber("y", y_val);
 		table->PutNumber("distance", dist_val);
 		table->PutNumber("horz_angle", horz_angle);
 		table->PutNumber("vert_angle", vert_angle);
+		*/
 	}
 
 	template<typename T>

@@ -99,8 +99,8 @@
 #define PROCESSING_BOILER_HEIGHT	80.25f //The boiler tape centered height in inches	
 #define PROCESSING_BOILER_OFFSET	10.2f //The distance (in inches) that the base of the boiler is from the tape
 //Extra details for camera
-#define PROCESSING_CAMERA_WIDTH		800.0f //Camera dimension width in pixels
-#define PROCESSING_CAMERA_HEIGHT	600.0f //Camera dimension height in pixels
+#define PROCESSING_CAMERA_WIDTH		640.0f //Camera dimension width in pixels
+#define PROCESSING_CAMERA_HEIGHT	480.0f //Camera dimension height in pixels
 #define PROCESSING_CAMERA_FPS		15.0f //Camera stream fps
 #define PROCESSING_CAMERA_FOV 		71.63f //Camera field of view in degrees
 #define PROCESSING_CAMERA_FOCAL		2.8f //The camera focal length in millimeters

@@ -117,21 +117,21 @@ namespace processing {
 		//Logger::LogWindow("Undistorted", frame);
 
 		//Turn the BGR image into HSV
-		cv::cvtColor(frame, frame, CV_BGR2HSV);
+		cv::cvtColor(frame, newFrame, CV_BGR2HSV);
 
 		//HSV threshold
-		cv::inRange(frame, cv::Scalar(threshMinH, threshMinS, threshMinV), 
+		cv::inRange(newFrame, cv::Scalar(threshMinH, threshMinS, threshMinV), 
 						cv::Scalar(threshMaxH, threshMaxS, threshMaxV), newFrame);
 
 		//Blur the threshed image to remove random depth static
-		cv::medianBlur(newFrame, newFrame, PROCESSING_MEDIAN_BLUR);
+		//cv::medianBlur(newFrame, newFrame, PROCESSING_MEDIAN_BLUR);
 
 		//Smooth back the thicker parts of the image to crisp out the target
-		cv::Mat dilater = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2 * dilationSize + 1,
-					2 * dilationSize + 1),cv::Point(dilationSize, dilationSize));
+		//cv::Mat dilater = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2 * dilationSize + 1,
+		//			2 * dilationSize + 1),cv::Point(dilationSize, dilationSize));
 
 		//Apply erode method
-		cv::dilate(newFrame, newFrame, dilater);
+		//cv::dilate(newFrame, newFrame, dilater);
 	}
 
 	void processFrame(cv::Mat &frame, std::vector<Target> &targets, cv::Mat &contoured) {
@@ -145,7 +145,7 @@ namespace processing {
 
 		unsigned int ind = 0; //Set contour count
 
-		contoured = cv::Mat::zeros(frame.size(), CV_8UC3);
+		//contoured = cv::Mat::zeros(frame.size(), CV_8UC3);
 
 		//Loop through each contour found
 		for(std::vector<cv::Point> contour : contours) {
@@ -215,10 +215,10 @@ namespace processing {
 								//target.depth = contour_depth;
 
 								//Draw a contour index for the found contour 
-								cv::Scalar color = cv::Scalar(255, 0, 0);
-								cv::drawContours(contoured, contours, ind, color, 2, 8, hierarchy, 0, cv::Point());
-								cv::putText(contoured, boost::lexical_cast<std::string>(ind), cv::Point(contour_x - 10, r_contour_y),
-									CV_FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255));
+								//cv::Scalar color = cv::Scalar(255, 0, 0);
+								//cv::drawContours(contoured, contours, ind, color, 2, 8, hierarchy, 0, cv::Point());
+								//cv::putText(contoured, boost::lexical_cast<std::string>(ind), cv::Point(contour_x - 10, r_contour_y),
+								//	CV_FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255));
 
 								//Add current target to target calculation list
 								targets.push_back(target);

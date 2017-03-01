@@ -93,7 +93,114 @@ namespace perception {
 		}
 	}
 
+	cv::VideoCapture axis_camera;
+	unsigned long empty_frame_count;
+	cv::Mat camera_frame;
+	cv::Mat threshed;
+	cv::Mat contoured;
+
 	void pullLoop() {
+		/*//MLOG(SW("Started the perception pull loop!"));
+
+		//Table::init();
+
+		//OLDSRC
+		//boost::thread(Table::init);	
+
+		//Camera frame mat and other frames
+		extern cv::Mat camera_frame, threshed, contoured;
+
+		//Video capture from mjpg stream
+		extern cv::VideoCapture axis_camera = getCapture();
+
+		//Set capture properties
+		axis_camera.set(CV_CAP_PROP_FPS, PROCESSING_CAMERA_FPS);
+
+		unsigned long empty_frame_count = 0;
+
+		//Loop forever
+		while (1) {*/
+		//table->GetNumber("OK", 0.0);
+
+		//Pull new frame from capture stream (make sure you constantly pull from the buffer)
+		axis_camera.read(camera_frame);
+
+		bool passed = true;
+
+		if (camera_frame.empty()) {
+			empty_frame_count++;
+			std::cout << "empty frame" << std::endl;
+			passed = false;
+		}
+
+		if (empty_frame_count > PERCEPTION_MAX_FAIL_COUNT) {
+			axis_camera = getCapture();
+
+			empty_frame_count = 0;
+
+			//continue;
+			return;
+		}
+
+		if (!passed) {
+			//boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
+			//continue;
+			return;
+		}
+
+		//Logger::LogWindow("Original", camera_frame);
+
+		cv::Mat threshed;
+
+		processing::preProcessing(camera_frame, threshed);
+
+		std::vector<processing::Target> targets;
+
+		processing::processFrame(threshed, targets, contoured);
+
+		unsigned int target_ind = 0;
+
+		//std::cout << "POSSIBLE TARGETS FOUND: " << targets.size() << std::endl;
+
+		/*for(processing::Target target : targets) {
+			std::cout << "IND: " << target_ind << "\n	AREA: "
+			<< target.area << "\n	WIDTH: " << target.width
+			<< "\n	HEIGHT: " << target.height << "\n	PERIM: "
+			<< target.perim << "\n	X: " << target.x << "\n	Y: "
+			<< target.y << "\n	SIDES: " << target.sides << std::endl;
+			target_ind++;
+		}*/
+
+		processing::Target final_target;
+
+		processing::processTargets(targets, final_target);
+
+		Table::updateTarget(final_target);
+
+		//Logger::LogWindow("Threshed", threshed);
+		//Logger::LogWindow("Contours", contoured);
+
+		//{
+			//boost::mutex::scoped_lock locks(perception_lock);
+			/*if (!turret_has_frame) {
+				camera_frame.copyTo(turret_frame);
+				turret_has_frame = true;
+			}*/
+		OnTurretFrame(camera_frame);
+		//}
+
+		//boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
+
+		//cv::waitKey(1);
+
+		//if(cv::waitKey(30) >= 255) break;
+
+		//}
+
+		//cv::destroyAllWindows();
+	}
+
+	void startPerception() {
 		MLOG(SW("Started the perception pull loop!"));
 
 		Table::init();
@@ -111,91 +218,8 @@ namespace perception {
 		axis_camera.set(CV_CAP_PROP_FPS, PROCESSING_CAMERA_FPS);
 
 		unsigned long empty_frame_count = 0;
-
-		//Loop forever
-		while (1) {
-			//table->GetNumber("OK", 0.0);
-
-			//Pull new frame from capture stream (make sure you constantly pull from the buffer)
-			axis_camera.read(camera_frame);
-
-			bool passed = true;
-
-			if (camera_frame.empty()) {
-				empty_frame_count++;
-				std::cout << "empty frame" << std::endl;
-				passed = false;
-			}
-
-			if (empty_frame_count > PERCEPTION_MAX_FAIL_COUNT) {
-				axis_camera = getCapture();
-
-				empty_frame_count = 0;
-
-				continue;
-			}
-
-			if (!passed) {
-				boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
-				continue;
-			}
-
-			//Logger::LogWindow("Original", camera_frame);
-
-			cv::Mat threshed;
-
-			processing::preProcessing(camera_frame, threshed);
-
-			std::vector<processing::Target> targets;
-
-			processing::processFrame(threshed, targets, contoured);
-
-			unsigned int target_ind = 0;
-
-			//std::cout << "POSSIBLE TARGETS FOUND: " << targets.size() << std::endl;
-
-			/*for(processing::Target target : targets) {
-				std::cout << "IND: " << target_ind << "\n	AREA: "
-				<< target.area << "\n	WIDTH: " << target.width
-				<< "\n	HEIGHT: " << target.height << "\n	PERIM: "
-				<< target.perim << "\n	X: " << target.x << "\n	Y: "
-				<< target.y << "\n	SIDES: " << target.sides << std::endl;
-				target_ind++;
-			}*/
-
-			processing::Target final_target;
-
-			processing::processTargets(targets, final_target);
-
-			Table::updateTarget(final_target);
-
-			//Logger::LogWindow("Threshed", threshed);
-			//Logger::LogWindow("Contours", contoured);
-
-			{
-				boost::mutex::scoped_lock locks(perception_lock);
-				if (!turret_has_frame) {
-					camera_frame.copyTo(turret_frame);
-					turret_has_frame = true;
-				}
-				
-				OnTurretFrame(camera_frame);
-			}
-
-			boost::this_thread::sleep_for(boost::chrono::milliseconds(PERCEPTION_PULL_LOOP_DELAY));
-
-			//cv::waitKey(20);
-
-			//if(cv::waitKey(30) >= 255) break;
-
-		}
-
-		cv::destroyAllWindows();
-	}
-
-	void startPerceptionLoop() {
-		MLOG(SW("Starting the perception loop..."));
-		boost::thread pullLoopThread(pullLoop);
+		
+		//boost::thread pullLoopThread(pullLoop);
 	}
 
 	bool hasTurretFrame() {

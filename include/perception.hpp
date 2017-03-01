@@ -80,9 +80,9 @@
 
 #define PERCEPTION_LOG_TAG 			"PERCEP" //Logger tag name
 #define PERCEPTION_TABLE_NAME 		"perception" //The network table name
-#define PERCEPTION_PULL_URL 		"http://10.54.31.25/mjpg/video.mjpg"
-#define PERCEPTION_MAX_FAIL_COUNT	30 //Maximum empty frame count
-#define PERCEPTION_PULL_LOOP_DELAY	30 //The milliseconds to wait before pulling the new frame
+#define PERCEPTION_PULL_URL 			"http://10.54.31.25/mjpg/video.mjpg"
+#define PERCEPTION_MAX_FAIL_COUNT		30 //Maximum empty frame count
+#define PERCEPTION_PULL_LOOP_DELAY	5 //The milliseconds to wait before pulling the new frame
 
 namespace perception {
 	extern boost::mutex perception_lock;
@@ -90,7 +90,7 @@ namespace perception {
 	cv::VideoCapture getCapture();
 
 	void pullLoop();
-	void startPerceptionLoop();
+	void startPerception();
 	
 	void getTurretFrame(cv::Mat &);
 	

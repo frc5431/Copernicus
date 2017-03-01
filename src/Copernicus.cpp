@@ -3,6 +3,7 @@
 #include <iostream>
 #include <networktables/NetworkTable.h>
 #include <perception.hpp>
+#include <thread>
 #include <MACE/MACE.h>
 
 using namespace mc;
@@ -25,7 +26,7 @@ std::shared_ptr<NetworkTable> table;
 
 namespace titan {
 	void setTurretAngle(const float angle) {
-		turretBaseAngle.getTransformation().rotation[2] = math::toRadians(angle);
+		turretBaseAngle.getTransformation().rotation[2] = angle;
 		turretBaseText.setText(std::to_wstring(static_cast<int>(angle)));
 	}
 
@@ -84,6 +85,7 @@ namespace titan {
 
 cv::Mat frame;
 
+//josef memes
 class CameraComponent : public gfx::Component {
 public:
 	void init(gfx::Entity* e) {
@@ -98,6 +100,7 @@ public:
 		return false;
 	}//screw oliver
 	void render(gfx::Entity* e) {
+		/*
 		titan::setFloorIntake(table->GetBoolean("floorIntake", false));
 		titan::setFlywheelRPM(table->GetNumber("flywheelRPM", 0.0));
 		titan::setGearIn(table->GetBoolean("holdsGear", false));
@@ -105,9 +108,10 @@ public:
 		titan::setTargetRPM(table->GetNumber("targetRPM", 0.0));
 		titan::setTopIntake(table->GetBoolean("topIntake", false));
 		titan::setTurretAngle(table->GetNumber("turretAngle", 0.0));
+		*/
 	}
 
-	void clean(gfx::Entity* e) {
+	void clean(gfx::Entity* e){
 		gfx::Image* en = dynamic_cast<gfx::Image*>(e);
 
 		if (!frame.empty()) {
@@ -123,7 +127,7 @@ public:
 };
 
 void perception::OnTurretFrame(cv::Mat& m) {
-	m.copyTo(frame);
+	frame = m;
 	camera.makeDirty();
 }
 
@@ -167,7 +171,7 @@ void create() {
 	gearIn.setTexture(Colors::GREEN);
 	gearIn.setHorizontalAlign(gfx::HorizontalAlign::RIGHT);
 	group.addChild(gearIn);
-
+	
 	floorIntake = gfx::Image(Colors::WHITE);
 	floorIntake.setWidth(0.6f);
 	floorIntake.setHeight(0.1f);
@@ -222,11 +226,10 @@ void create() {
 
 int main(int argc, char** argv) {
 	try {
-		perception::startPerceptionLoop();
-
+		/*
 		NetworkTable::SetClientMode();
 		NetworkTable::SetTeam(5431);
-		table = NetworkTable::GetTable("copernicus");
+		table = NetworkTable::GetTable("copernicus");*/
 
 		os::WindowModule win = os::WindowModule(720, 720, "Copernicus");
 		win.setCreationCallback(&create);
@@ -238,12 +241,25 @@ int main(int argc, char** argv) {
 
 		MACE::init();
 
+		std::thread percepThread = std::thread([] () {
+			perception::startPerception();
+
+			while( MACE::isRunning() ) {
+				perception::pullLoop();
+
+				mc::os::wait(33);
+			}
+		});
+
 		while (MACE::isRunning()) {
 			MACE::update();
 
 			mc::os::wait(33);
 		}
+
 		MACE::destroy();
+
+		percepThread.join();
 	}
 	catch (const std::exception& ex) {
 		Error::handleError(ex);
