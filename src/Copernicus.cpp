@@ -28,7 +28,7 @@ void attemptSerialWrite(const std::string message) {
 		ser.write(message);
 	} else {
 		try {
-			ser.init("//./COM10", 0b11111111, 115200);
+			ser.init("//./COM10", 115200);
 		} catch( ... ) {
 			//ignore
 		}
@@ -136,6 +136,7 @@ void create() {
 	gearIn.setHorizontalAlign(gfx::HorizontalAlign::RIGHT);
 	group.addChild(gearIn);
 
+	/*
 	red = gfx::ColorAttachment();
 	red.init();
 	red.load(Colors::RED);
@@ -157,7 +158,7 @@ void create() {
 
 	intakeText = gfx::Text(L"INTAKE", f);
 	intakeText.setTexture(Colors::BLACK);
-	intake.addChild(intakeText);
+	intake.addChild(intakeText);*/
 }
 
 int main(int argc, char** argv) {
