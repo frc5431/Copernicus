@@ -1,0 +1,100 @@
+#include "Adafruit_WS2801.h"
+#include "SPI.h" // Comment out this line if using Trinket or Gemma
+#ifdef __AVR_ATtiny85__
+ #include <avr/power.h>
+#endif
+
+uint8_t dataPin  = 2;    // Yellow wire on Adafruit Pixels
+uint8_t clockPin = 3;    // +Green wire on Adafruit Pixels
+
+Adafruit_WS2801 strip = Adafruit_WS2801(76, dataPin, clockPin);
+
+int greenPosition = 50;
+bool hasGear = false;
+bool needsClimbing = false;
+bool isNotifying = false;
+int timer = 0;
+
+void setup() {
+#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000L)
+  clock_prescale_set(clock_div_1); // Enable 16 MHz on Trinket
+#endif
+
+  strip.begin();
+
+  // Update LED contents, to start they are all 'off'
+  strip.show();
+
+  Serial.begin(115200);
+
+  randomSeed(analogRead(0));
+}
+
+
+void loop() {
+  while(1){ 
+
+    if(Serial.available()){
+      char read = Serial.read();
+    
+      Serial.print("Read: ");
+      Serial.println(read);
+      
+      if(read == 'g') {
+        hasGear = true;
+      } else if(read == 'o') {
+        hasGear = false;
+      }else if(read == 'c'){
+        needsClimbing = true;  
+      }else if(read == 's'){
+        needsClimbing = false;  
+      }
+    }
+
+    if(!needsClimbing){
+      setRandomBlue();
+    }else{
+      setRed();
+    }
+
+    if(hasGear){  
+      for(int i = 0; i < strip.numPixels(); i ++){
+        strip.setPixelColor(i, Color(0,255,0));
+      } 
+    }
+
+    strip.show();
+  
+    delay(75);
+  } 
+}
+
+void turnOff(){
+  for(int i=0;i<strip.numPixels();i++){
+    strip.setPixelColor(i, Color(0, 0, 0));
+  }
+}
+
+void setRed(){
+  for(int i=0;i<strip.numPixels();i++){
+    strip.setPixelColor(i, Color(255, 0, 0));
+  }
+}
+
+void setRandomBlue(){
+  for(int i=0;i<strip.numPixels();i++){
+    strip.setPixelColor(i, Color(random(50),random(50),255));
+  }
+}
+
+// Create a 24 bit color value from R,G,B
+uint32_t Color(byte r, byte g, byte b)
+{
+  uint32_t c;
+  c = r;
+  c <<= 8;
+  c |= g;
+  c <<= 8;
+  c |= b;
+  return c;
+}

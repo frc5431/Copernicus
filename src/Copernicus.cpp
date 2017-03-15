@@ -7,12 +7,20 @@
 #include <Serial.hpp>
 #include <MACE/MACE.h>
 
+#define StayStill 0
+#define DriveForward 1
+#define RedLeft 2 
+#define RedMiddle 3
+#define RedRight 4
+
+#define STRINGIFY(macro) #macro 
+
 using namespace mc;
 
 gfx::Group group = gfx::Group();
 
 gfx::Text gearIn;
-gfx::Text intakeText;
+gfx::Text intakeRunning, intakeOff;
 gfx::Image intake, camera;
 
 gfx::ColorAttachment green, red, yellow;
@@ -22,6 +30,71 @@ os::Serial ser;
 //MjpgClient client("http://10.54.31.25", 80, "mjpg/video.mjpg"); //Get cap line
 
 std::shared_ptr<NetworkTable> table;
+
+int currentAuton = StayStill;
+
+gfx::Text autonText;
+
+
+void getNextAuton() {
+	currentAuton++;
+
+	if( currentAuton >= 5 ) {
+		currentAuton = 0;
+	}
+
+	if( currentAuton == StayStill ) {
+		autonText.setText(L"Stay Still");
+	} else if( currentAuton == DriveForward ) {
+		autonText.setText(L"Drive Forward");
+	} else if( currentAuton == RedLeft ) {
+		autonText.setText(L"Red Left");
+	} else if( currentAuton == RedMiddle ) {
+		autonText.setText(L"Red Middle");
+	} else if( currentAuton == RedRight ) {
+		autonText.setText(L"Red Right");
+	}
+
+	table->PutNumber("autonSelect", currentAuton);
+}
+
+class AutonSelectButton: public gfx::Image {
+public:
+	bool clicked = false;
+
+	void onInit() override {
+		gfx::Image::onInit();
+	}
+	void onUpdate() override {
+		gfx::Image::onUpdate();
+	}//screw oliver
+	void onRender() override {
+		gfx::Image::onRender();
+	}
+	void onClean() override {
+		gfx::Image::onClean();
+	}
+
+	void onDestroy() override {
+		gfx::Image::onDestroy();
+	};
+
+	void onHover() override {
+		gfx::Image::onHover();
+
+		if(	os::Input::isKeyDown(os::Input::MOUSE_LEFT) ) {
+			clicked = true;
+		}
+
+		if( clicked && os::Input::isKeyReleased(os::Input::MOUSE_LEFT) ) {
+			clicked = false;
+			
+			getNextAuton();
+		}
+	}
+};
+
+AutonSelectButton autonSelect = AutonSelectButton();
 
 void attemptSerialWrite(const std::string message) {
 	if( ser.isConnected() && ser.isValid() ) {
@@ -39,16 +112,20 @@ namespace titan {
 	void setTopIntake(const bool intaking, const bool reverse) {
 		if (intaking) {
 			if( reverse ) {
-				intake.setTexture(yellow);
+				//intake.setTexture(yellow);
 				//intakeText.setText(L"INTAKING REVERSE");
 			} else {
-				intake.setTexture(green);
-			//	intakeText.setText(L"INTAKING");
+				//intake.setTexture(green);
+				//intakeText.setText(L"INTAKING");
+				intakeRunning.setProperty(gfx::Entity::DISABLED, false);
+				intakeOff.setProperty(gfx::Entity::DISABLED, true);
 			}
 		}
 		else {
-			intake.setTexture(red);
+			//intake.setTexture(red);
 			//intakeText.setText(L"NOT INTAKING");
+			intakeRunning.setProperty(gfx::Entity::DISABLED, true);
+			intakeOff.setProperty(gfx::Entity::DISABLED, false);
 		}
 	}
 
@@ -100,7 +177,7 @@ public:
 		if( key == "gearIn" ) {
 			titan::setGearIn(value->GetBoolean());
 		} else if( key == "intake" ) {
-			//titan::setTopIntake(value->GetBoolean(), false);
+			titan::setTopIntake(value->GetBoolean(), false);
 		} else if( key == "timeLeft" ) {
 			if( value->GetDouble() > 120 ) {
 				attemptSerialWrite("c");
@@ -135,8 +212,20 @@ void create() {
 	gearIn.setTexture(Colors::GREEN);
 	gearIn.setHorizontalAlign(gfx::HorizontalAlign::RIGHT);
 	group.addChild(gearIn);
+	
+	f.setSize(24);
+	autonText = gfx::Text(STRINGIFY(StayStill), f);
+	autonText.setTexture(Colors::BLACK);
+	autonText.setHorizontalAlign(gfx::HorizontalAlign::LEFT);
+	group.addChild(autonText);
 
-	/*
+	autonSelect.setTexture(Colors::GRAY);
+	autonSelect.setX(-0.9);
+	autonSelect.setY(-0.2);
+	autonSelect.setWidth(0.1f);
+	autonSelect.setHeight(0.1f);
+	group.addChild(autonSelect);
+
 	red = gfx::ColorAttachment();
 	red.init();
 	red.load(Colors::RED);
@@ -156,9 +245,14 @@ void create() {
 	intake.setY(0.9f);
 	group.addChild(intake);
 
-	intakeText = gfx::Text(L"INTAKE", f);
-	intakeText.setTexture(Colors::BLACK);
-	intake.addChild(intakeText);*/
+	intakeOff = gfx::Text(L"NOT INTAKING", f);
+	intakeOff.setTexture(Colors::BLACK);
+	intake.addChild(intakeOff);
+
+	intakeRunning = gfx::Text(L"INTAKING", f);
+	intakeRunning.setTexture(Colors::GREEN);
+	intakeRunning.setProperty(gfx::Entity::DISABLED, true);
+	intake.addChild(intakeRunning);
 }
 
 int main(int argc, char** argv) {
